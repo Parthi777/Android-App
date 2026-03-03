@@ -1,0 +1,21 @@
+# Offline Sync Skill
+
+## Objective
+Allow application usage without internet connectivity.
+
+## Responsibilities
+- Cache API responses
+- Store offline actions
+- Background synchronization
+
+## Behavior
+If offline:
+  Store actions locally
+
+When online:
+  Sync automatically
+
+## Requirements
+- Conflict resolution
+- Retry queue
+- Timestamp validation

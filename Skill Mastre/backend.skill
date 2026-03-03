@@ -1,0 +1,26 @@
+# Backend Skill
+
+## Objective
+Handle all server communication and backend workflows.
+
+## Responsibilities
+- API integration
+- CRUD operations
+- Authentication validation
+- Webhook processing
+- Automation triggers
+
+## Design Principles
+- Centralized API service layer
+- Async communication
+- Retry failed requests
+- Handle timeout scenarios
+
+## Rules
+- Never expose API keys
+- Use environment configuration
+- Validate request responses
+- Standardize API response format
+
+## API Flow
+UI → Controller → Service Layer → API → Response Handler

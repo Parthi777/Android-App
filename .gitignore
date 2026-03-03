@@ -1,0 +1,12 @@
+# Mac
+.DS_Store
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# Flutter/Dart (if applicable)
+.dart_tool/
+build/
+*.log

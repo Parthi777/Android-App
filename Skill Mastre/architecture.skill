@@ -1,0 +1,46 @@
+# Architecture Skill
+
+## Objective
+Design and maintain a scalable, maintainable mobile-first application architecture.
+
+## Responsibilities
+- Define application layers
+- Enforce separation of concerns
+- Maintain modular structure
+- Prevent tightly coupled components
+- Ensure scalability for future features
+
+## Architecture Pattern
+Follow Clean Architecture:
+
+1. Presentation Layer
+   - UI Components
+   - Screens
+   - Navigation
+
+2. Application Layer
+   - Controllers
+   - State Management
+   - Business workflows
+
+3. Domain Layer
+   - Business logic
+   - Entities
+   - Use cases
+
+4. Infrastructure Layer
+   - APIs
+   - Database
+   - External integrations
+
+## Rules
+- UI must never call APIs directly
+- Business logic must remain reusable
+- Each feature must exist as an independent module
+- Avoid global dependencies
+
+## Folder Strategy
+/features
+/shared
+/services
+/core

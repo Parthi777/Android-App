@@ -1,0 +1,29 @@
+# Mobile UI Skill
+
+## Objective
+Create responsive mobile-first interfaces optimized for touch interaction.
+
+## Design Rules
+- Mobile-first layout mandatory
+- Minimum touch target: 48px
+- Thumb-friendly navigation
+- Bottom tab navigation preferred
+- Avoid desktop-style layouts
+
+## UI Standards
+- Consistent spacing system
+- Reusable components
+- Skeleton loading states
+- Smooth transitions
+
+## Components
+- Cards
+- Lists
+- Forms
+- Modal sheets
+- Floating actions
+
+## UX Principles
+- Reduce user steps
+- Clear feedback after action
+- Visible loading indicators

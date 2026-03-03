@@ -1,0 +1,18 @@
+# AI Agent Skill
+
+## Objective
+Control intelligent agent behavior.
+
+## Responsibilities
+- Intent recognition
+- Workflow decision making
+- Tool selection
+- Memory handling
+
+## Behavior Rules
+- Confirm before critical action
+- Maintain conversation context
+- Ask clarification when unsure
+
+## Agent Flow
+User Input → Intent → Tool → Response

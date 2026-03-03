@@ -1,0 +1,18 @@
+# Performance Skill
+
+## Objective
+Optimize mobile performance.
+
+## Responsibilities
+- Reduce load time
+- Improve rendering
+- Optimize memory usage
+
+## Techniques
+- Lazy loading
+- API batching
+- Image optimization
+- Background processing
+
+## Rules
+Avoid heavy computation in UI thread.

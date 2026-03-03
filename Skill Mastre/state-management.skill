@@ -1,0 +1,25 @@
+# State Management Skill
+
+## Objective
+Maintain predictable application data flow.
+
+## Responsibilities
+- Global application state
+- User authentication state
+- API data synchronization
+- UI refresh logic
+
+## Rules
+- Single source of truth
+- Avoid duplicated state
+- Prevent unnecessary re-render
+- Cache frequently used data
+
+## State Types
+- Global State
+- Screen State
+- Session State
+- Cached Data
+
+## Behavior
+Update UI automatically when state changes.

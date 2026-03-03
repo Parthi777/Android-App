@@ -1,0 +1,38 @@
+{
+  "project_info": {
+    "project_number": "63402102575",
+    "project_id": "bhavani-business-mgr-2026",
+    "storage_bucket": "bhavani-business-mgr-2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:63402102575:android:093eefe0a6d67c02cc5bda",
+        "android_client_info": {
+          "package_name": "com.bhavani.ai_business_manager"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "63402102575-mnpths4rcoi3tfrshhdt14md64bgd0dp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bhavani.ai_business_manager",
+            "certificate_hash": "9e694f15d48075a6efa2f2da96403f67120e4424"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBMbvwyzc4n2VI_AsEgKsdvgzjMOWdJ0DY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

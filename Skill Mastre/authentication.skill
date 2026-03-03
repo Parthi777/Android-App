@@ -1,0 +1,20 @@
+# Authentication Skill
+
+## Objective
+Securely manage user identity and sessions.
+
+## Supported Methods
+- OTP login
+- Google OAuth
+- Role-based access
+
+## Responsibilities
+- Token management
+- Session expiration
+- Secure storage
+- Access validation
+
+## Security Rules
+- Never store tokens in plain storage
+- Refresh expired tokens automatically
+- Logout inactive sessions

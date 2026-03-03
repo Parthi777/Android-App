@@ -1,0 +1,19 @@
+# Database Skill
+
+## Objective
+Design optimized and scalable data storage.
+
+## Responsibilities
+- Schema design
+- Relationship management
+- Query optimization
+- Data consistency
+
+## Rules
+- Normalize data structures
+- Index searchable fields
+- Avoid duplicate records
+- Separate transactional data
+
+## Patterns
+Repository Pattern required.

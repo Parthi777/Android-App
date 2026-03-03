@@ -1,0 +1,17 @@
+import 'package:flutter/material.dart';
+
+class SettingsPage extends StatelessWidget {
+  const SettingsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: Text(
+          'App Settings & Branch Config',
+          style: TextStyle(fontSize: 24),
+        ),
+      ),
+    );
+  }
+}

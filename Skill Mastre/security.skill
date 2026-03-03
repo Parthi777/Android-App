@@ -1,0 +1,14 @@
+# Security Skill
+
+## Objective
+Protect user and business data.
+
+## Responsibilities
+- Data encryption
+- Permission checks
+- Secure API access
+
+## Rules
+- Validate all inputs
+- Prevent injection attacks
+- Encrypt sensitive storage

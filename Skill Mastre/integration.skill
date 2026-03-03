@@ -1,0 +1,14 @@
+# Integration Skill
+
+## Objective
+Connect external systems.
+
+## Supported Integrations
+- WhatsApp API
+- n8n workflows
+- Google Sheets
+- CRM systems
+
+## Rules
+- Use webhook-based communication
+- Validate external responses

@@ -1,0 +1,29 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "bhavani-business-mgr-2026",
+          "appId": "1:63402102575:android:093eefe0a6d67c02cc5bda",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "bhavani-business-mgr-2026",
+          "configurations": {
+            "android": "1:63402102575:android:093eefe0a6d67c02cc5bda"
+          }
+        }
+      }
+    }
+  },
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Bhavani AI Business Manager",
+        "supportEmail": "parthimech1993@gmail.com"
+      }
+    }
+  }
+}

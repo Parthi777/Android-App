@@ -1,0 +1,20 @@
+# Error Handling Skill
+
+## Objective
+Ensure application stability.
+
+## Responsibilities
+- Detect failures
+- Handle exceptions
+- Recover gracefully
+
+## Error Types
+- Network errors
+- Validation errors
+- Server failures
+- Permission errors
+
+## Rules
+- Never crash UI
+- Show user-friendly messages
+- Log technical errors silently
