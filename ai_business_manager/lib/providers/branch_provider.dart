@@ -33,3 +33,54 @@ class BranchNotifier extends Notifier<Branch?> {
 final branchProvider = NotifierProvider<BranchNotifier, Branch?>(() {
   return BranchNotifier();
 });
+
+// Notifier to manage the list of saved branches
+class BranchesListNotifier extends Notifier<List<Branch>> {
+  @override
+  List<Branch> build() {
+    final cache = ref.read(appCacheProvider).value;
+    if (cache != null) {
+      final cachedList = cache.readJsonList('saved_branches');
+      if (cachedList != null) {
+        return cachedList.map((json) => Branch.fromJson(json)).toList();
+      }
+    }
+    return [];
+  }
+
+  Future<void> addBranch(Branch branch) async {
+    final newList = [...state, branch];
+    state = newList;
+    final cache = ref.read(appCacheProvider).value;
+    await cache?.writeJsonList(
+      'saved_branches',
+      newList.map((b) => b.toJson()).toList(),
+    );
+
+    // Auto-set as active if it's the first branch
+    if (newList.length == 1) {
+      ref.read(branchProvider.notifier).setActiveBranch(branch);
+    }
+  }
+
+  Future<void> removeBranch(String id) async {
+    final newList = state.where((b) => b.id != id).toList();
+    state = newList;
+    final cache = ref.read(appCacheProvider).value;
+    await cache?.writeJsonList(
+      'saved_branches',
+      newList.map((b) => b.toJson()).toList(),
+    );
+
+    // If active branch is removed, clear it
+    final activeBranch = ref.read(branchProvider);
+    if (activeBranch?.id == id) {
+      ref.read(branchProvider.notifier).clearActiveBranch();
+    }
+  }
+}
+
+final branchesListProvider =
+    NotifierProvider<BranchesListNotifier, List<Branch>>(() {
+      return BranchesListNotifier();
+    });

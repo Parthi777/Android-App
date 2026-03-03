@@ -14,8 +14,7 @@ class SettingsPage extends HookConsumerWidget {
     final branch = ref.watch(branchProvider);
     final branchNotifier = ref.read(branchProvider.notifier);
 
-    // Using a future provider state checking workaround to get the list of branches if available.
-    // In a full implementation, we would have a branchesListProvider.
+    final branches = ref.watch(branchesListProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
@@ -80,41 +79,50 @@ class SettingsPage extends HookConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   const Text('Available Branches:'),
-                  // TODO: Real implementation of fetching all configured branches.
-                  // For now, we simulate branch change.
-                  ListTile(
-                    title: const Text('Dharani TVS - Main'),
-                    subtitle: const Text('ID: 1abc...'),
-                    trailing: branch?.id == '1'
-                        ? const Icon(Icons.check_circle, color: Colors.green)
-                        : null,
-                    onTap: () {
-                      final newBranch = Branch(
-                        id: '1',
-                        name: 'Dharani TVS - Main',
-                        googleSheetId: 'dummy_sheet_id',
-                        enquirySheetGid: '0',
-                        bookingSheetGid: '1',
-                        soldSheetGid: '2',
-                        stockSheetGid: '3',
-                      );
-                      branchNotifier.setActiveBranch(newBranch);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Switched to Main Branch'),
-                        ),
-                      );
-                    },
+                  ...branches.map(
+                    (b) => ListTile(
+                      title: Text(b.name),
+                      subtitle: Text(
+                        'ID: ${b.googleSheetId.length > 8 ? '${b.googleSheetId.substring(0, 8)}...' : b.googleSheetId}',
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (branch?.id == b.id)
+                            const Icon(Icons.check_circle, color: Colors.green),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              ref
+                                  .read(branchesListProvider.notifier)
+                                  .removeBranch(b.id);
+                            },
+                          ),
+                        ],
+                      ),
+                      onTap: () {
+                        branchNotifier.setActiveBranch(b);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Switched to ${b.name} Branch'),
+                          ),
+                        );
+                      },
+                    ),
                   ),
+                  if (branches.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16.0),
+                      child: Text('No branches configured. Add one below.'),
+                    ),
                   const Divider(),
                   Center(
                     child: TextButton.icon(
                       onPressed: () {
-                        // TODO: Implement Add Branch functionality
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Add Branch Coming Soon'),
-                          ),
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (context) => const _AddBranchDialog(),
                         );
                       },
                       icon: const Icon(Icons.add),
@@ -126,6 +134,131 @@ class SettingsPage extends HookConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AddBranchDialog extends ConsumerStatefulWidget {
+  const _AddBranchDialog();
+  @override
+  ConsumerState<_AddBranchDialog> createState() => _AddBranchDialogState();
+}
+
+class _AddBranchDialogState extends ConsumerState<_AddBranchDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _sheetIdController = TextEditingController();
+  final _enquiryGidController = TextEditingController();
+  final _bookingGidController = TextEditingController();
+  final _soldGidController = TextEditingController();
+  final _stockGidController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _sheetIdController.dispose();
+    _enquiryGidController.dispose();
+    _bookingGidController.dispose();
+    _soldGidController.dispose();
+    _stockGidController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 16,
+        right: 16,
+        top: 32,
+      ),
+      child: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Add New Branch',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Branch Name'),
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
+              TextFormField(
+                controller: _sheetIdController,
+                decoration: const InputDecoration(
+                  labelText: 'Master Google Sheet ID',
+                ),
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
+              TextFormField(
+                controller: _enquiryGidController,
+                decoration: const InputDecoration(
+                  labelText: 'Enquiry Sheet Tab GID',
+                ),
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
+              TextFormField(
+                controller: _bookingGidController,
+                decoration: const InputDecoration(
+                  labelText: 'Bookings Sheet Tab GID',
+                ),
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
+              TextFormField(
+                controller: _soldGidController,
+                decoration: const InputDecoration(
+                  labelText: 'Sold Sheet Tab GID',
+                ),
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
+              TextFormField(
+                controller: _stockGidController,
+                decoration: const InputDecoration(
+                  labelText: 'Stock Sheet Tab GID',
+                ),
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        final newBranch = Branch(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          name: _nameController.text,
+                          googleSheetId: _sheetIdController.text,
+                          enquirySheetGid: _enquiryGidController.text,
+                          bookingSheetGid: _bookingGidController.text,
+                          soldSheetGid: _soldGidController.text,
+                          stockSheetGid: _stockGidController.text,
+                        );
+                        ref
+                            .read(branchesListProvider.notifier)
+                            .addBranch(newBranch);
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    child: const Text('Save'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
       ),
     );
   }

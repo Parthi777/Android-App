@@ -1,67 +1,116 @@
+import 'dart:async';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../models/sheet_data_models.dart';
 import '../services/google_sheet_service.dart';
 import 'branch_provider.dart';
 
 // -- ENQUIRIES --
-final enquiriesProvider = FutureProvider<List<Enquiry>>((ref) async {
+final enquiriesProvider = FutureProvider.autoDispose<List<Enquiry>>((
+  ref,
+) async {
+  // Real-time syncing
+  final timer = Timer(const Duration(seconds: 10), () {
+    ref.invalidateSelf();
+  });
+  ref.onDispose(timer.cancel);
+
   final branch = ref.watch(branchProvider);
   if (branch == null) return [];
 
   final sheetService = ref.watch(googleSheetServiceProvider);
-  final rawData = await sheetService.getSheetData(
+  final sheetName = await sheetService.getSheetNameFromGid(
     branch.googleSheetId,
-    "'Enquiry'!A1:Z",
+    branch.enquirySheetGid,
   );
+  if (sheetName == null)
+    throw Exception(
+      "Could not find Enquiry Sheet Tab for GID: \${branch.enquirySheetGid}",
+    );
 
-  if (rawData == null || rawData.isEmpty) return [];
-
-  // Assuming first row is headers
-  return rawData.skip(1).map((row) => Enquiry.fromRow(row)).toList();
+  return sheetService.fetchModelRows(
+    branch.googleSheetId,
+    sheetName,
+    (row) => Enquiry.fromRow(row),
+  );
 });
 
 // -- BOOKINGS --
-final bookingsProvider = FutureProvider<List<Booking>>((ref) async {
+final bookingsProvider = FutureProvider.autoDispose<List<Booking>>((ref) async {
+  final timer = Timer(const Duration(seconds: 10), () {
+    ref.invalidateSelf();
+  });
+  ref.onDispose(timer.cancel);
+
   final branch = ref.watch(branchProvider);
   if (branch == null) return [];
 
   final sheetService = ref.watch(googleSheetServiceProvider);
-  final rawData = await sheetService.getSheetData(
+  final sheetName = await sheetService.getSheetNameFromGid(
     branch.googleSheetId,
-    "'Bookings'!A1:Z",
+    branch.bookingSheetGid,
   );
+  if (sheetName == null)
+    throw Exception(
+      "Could not find Bookings Sheet Tab for GID: \${branch.bookingSheetGid}",
+    );
 
-  if (rawData == null || rawData.isEmpty) return [];
-
-  return rawData.skip(1).map((row) => Booking.fromRow(row)).toList();
+  return sheetService.fetchModelRows(
+    branch.googleSheetId,
+    sheetName,
+    (row) => Booking.fromRow(row),
+  );
 });
 
 // -- SOLD --
-final soldProvider = FutureProvider<List<Sold>>((ref) async {
+final soldProvider = FutureProvider.autoDispose<List<Sold>>((ref) async {
+  final timer = Timer(const Duration(seconds: 10), () {
+    ref.invalidateSelf();
+  });
+  ref.onDispose(timer.cancel);
+
   final branch = ref.watch(branchProvider);
   if (branch == null) return [];
 
   final sheetService = ref.watch(googleSheetServiceProvider);
-  final rawData = await sheetService.getSheetData(
+  final sheetName = await sheetService.getSheetNameFromGid(
     branch.googleSheetId,
-    "'Sold'!A1:Z",
+    branch.soldSheetGid,
   );
+  if (sheetName == null)
+    throw Exception(
+      "Could not find Sold Sheet Tab for GID: \${branch.soldSheetGid}",
+    );
 
-  if (rawData == null || rawData.isEmpty) return [];
-  return rawData.skip(1).map((row) => Sold.fromRow(row)).toList();
+  return sheetService.fetchModelRows(
+    branch.googleSheetId,
+    sheetName,
+    (row) => Sold.fromRow(row),
+  );
 });
 
 // -- STOCK --
-final stockProvider = FutureProvider<List<Stock>>((ref) async {
+final stockProvider = FutureProvider.autoDispose<List<Stock>>((ref) async {
+  final timer = Timer(const Duration(seconds: 10), () {
+    ref.invalidateSelf();
+  });
+  ref.onDispose(timer.cancel);
+
   final branch = ref.watch(branchProvider);
   if (branch == null) return [];
 
   final sheetService = ref.watch(googleSheetServiceProvider);
-  final rawData = await sheetService.getSheetData(
+  final sheetName = await sheetService.getSheetNameFromGid(
     branch.googleSheetId,
-    "'Stock'!A1:Z",
+    branch.stockSheetGid,
   );
+  if (sheetName == null)
+    throw Exception(
+      "Could not find Stock Sheet Tab for GID: \${branch.stockSheetGid}",
+    );
 
-  if (rawData == null || rawData.isEmpty) return [];
-  return rawData.skip(1).map((row) => Stock.fromRow(row)).toList();
+  return sheetService.fetchModelRows(
+    branch.googleSheetId,
+    sheetName,
+    (row) => Stock.fromRow(row),
+  );
 });

@@ -2,7 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:googleapis/sheets/v4.dart' as sheets;
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import '../models/branch.dart';
+import '../models/sheet_data_models.dart';
 
 final googleSheetServiceProvider = Provider<GoogleSheetService>((ref) {
   return GoogleSheetService();
@@ -94,14 +94,53 @@ class GoogleSheetService {
     }
   }
 
-  // Helper method to convert branch Configuration into Data
-  Future<List<Map<String, dynamic>>> fetchBranchData(
-    Branch branch,
-    String sheetGid,
+  // Generic method to append a mapped model
+  Future<bool> appendModelRow(
+    String spreadsheetId,
+    String sheetName,
+    SheetDataMapper model,
   ) async {
-    // In Google Sheets API, to fetch by GID you usually need the Sheet Name.
-    // This helper will act as an interface to combine those.
-    // For now, it's a placeholder struct returning empty list until Sheet Names are strictly mapped.
-    return [];
+    return appendRow(spreadsheetId, '$sheetName!A:Z', model.toSheetRow());
+  }
+
+  // Generic method to fetch and map rows to a model
+  Future<List<T>> fetchModelRows<T>(
+    String spreadsheetId,
+    String sheetName,
+    T Function(List<dynamic>) fromRow,
+  ) async {
+    final rows = await getSheetData(spreadsheetId, '$sheetName!A:Z');
+    if (rows == null) return [];
+
+    // Skip the header row (assuming first row is header)
+    if (rows.length <= 1) return [];
+
+    return rows.skip(1).map((row) => fromRow(row)).toList();
+  }
+
+  // Retrieve the Sheet Name from its GID
+  Future<String?> getSheetNameFromGid(String spreadsheetId, String gid) async {
+    if (_sheetsApi == null) {
+      throw Exception('Google Sheets API is not initialized.');
+    }
+
+    try {
+      final spreadsheet = await _sheetsApi!.spreadsheets.get(
+        spreadsheetId,
+        $fields: 'sheets.properties',
+      );
+
+      final sheetsList = spreadsheet.sheets;
+      if (sheetsList == null) return null;
+
+      for (var sheet in sheetsList) {
+        if (sheet.properties?.sheetId?.toString() == gid) {
+          return sheet.properties?.title;
+        }
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to fetch sheet name for GID $gid: $e');
+    }
   }
 }

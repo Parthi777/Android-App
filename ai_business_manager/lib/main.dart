@@ -10,6 +10,7 @@ import 'package:ai_business_manager/firebase_options.dart';
 import 'package:ai_business_manager/theme/app_theme.dart';
 import 'package:ai_business_manager/providers/theme_provider.dart';
 import 'package:ai_business_manager/services/auth_service.dart';
+import 'package:ai_business_manager/services/google_sheet_service.dart';
 
 // UI Layout & Pages
 import 'package:ai_business_manager/widgets/app_layout.dart';
@@ -33,9 +34,23 @@ void main() async {
     debugPrint("Firebase init failed (maybe no options file): $e");
   }
 
+  // Create a container so we can read providers
+  final container = ProviderContainer();
+
+  // Initialize Google Sheets API
+  try {
+    final sheetService = container.read(googleSheetServiceProvider);
+    await sheetService.initialize('assets/credentials.json');
+  } catch (e) {
+    debugPrint("Google Sheets init failed: $e");
+  }
+
   runApp(
-    // Wrap the app with ProviderScope for Riverpod
-    const ProviderScope(child: AIBusinessManagerApp()),
+    // Wrap the app with ProviderScope
+    UncontrolledProviderScope(
+      container: container,
+      child: const AIBusinessManagerApp(),
+    ),
   );
 }
 

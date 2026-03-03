@@ -1,3 +1,14 @@
+DateTime _parseDateSafely(String value) {
+  final date = DateTime.tryParse(value);
+  if (date != null) return date;
+  return DateTime.now(); // Fallback date if sheet format is not standard
+}
+
+double _parseDoubleSafely(String value) {
+  final clean = value.replaceAll(RegExp(r'[^\\d.]'), '');
+  return double.tryParse(clean) ?? 0.0;
+}
+
 // Base mixin to ensure standard Google Sheets conversion
 mixin SheetDataMapper {
   List<Object?> toSheetRow();
@@ -6,67 +17,76 @@ mixin SheetDataMapper {
 // Model for Enquiry
 class Enquiry implements SheetDataMapper {
   final String id;
+  final DateTime date;
+  final String executive;
   final String customerName;
   final String phone;
   final String modelInterested;
+  final String source;
   final String status;
-  final DateTime date;
-  final String handledBy;
+
+  // UI expects 'handledBy'
+  String get handledBy => executive;
 
   Enquiry({
     required this.id,
+    required this.date,
+    required this.executive,
     required this.customerName,
     required this.phone,
     required this.modelInterested,
+    required this.source,
     required this.status,
-    required this.date,
-    required this.handledBy,
   });
 
   factory Enquiry.fromRow(List<dynamic> row) {
     return Enquiry(
       id: row.isNotEmpty ? row[0].toString() : '',
-      customerName: row.length > 1 ? row[1].toString() : '',
-      phone: row.length > 2 ? row[2].toString() : '',
-      modelInterested: row.length > 3 ? row[3].toString() : '',
-      status: row.length > 4 ? row[4].toString() : 'New',
-      date: row.length > 5
-          ? DateTime.tryParse(row[5].toString()) ?? DateTime.now()
+      date: row.length > 1
+          ? _parseDateSafely(row[1].toString())
           : DateTime.now(),
-      handledBy: row.length > 6 ? row[6].toString() : '',
+      executive: row.length > 2 ? row[2].toString() : '',
+      customerName: row.length > 3 ? row[3].toString() : '',
+      phone: row.length > 4 ? row[4].toString() : '',
+      modelInterested: row.length > 5 ? row[5].toString() : '',
+      source: row.length > 6 ? row[6].toString() : '',
+      status: row.length > 7 ? row[7].toString() : '',
     );
   }
 
   Map<String, dynamic> toJson() => {
     'id': id,
+    'date': date.toIso8601String(),
+    'executive': executive,
     'customerName': customerName,
     'phone': phone,
     'modelInterested': modelInterested,
+    'source': source,
     'status': status,
-    'date': date.toIso8601String(),
-    'handledBy': handledBy,
   };
 
   factory Enquiry.fromJson(Map<String, dynamic> json) => Enquiry(
-    id: json['id'],
-    customerName: json['customerName'],
-    phone: json['phone'],
-    modelInterested: json['modelInterested'],
-    status: json['status'],
-    date: DateTime.parse(json['date']),
-    handledBy: json['handledBy'],
+    id: json['id'] ?? '',
+    date: DateTime.tryParse(json['date'] ?? '') ?? DateTime.now(),
+    executive: json['executive'] ?? '',
+    customerName: json['customerName'] ?? '',
+    phone: json['phone'] ?? '',
+    modelInterested: json['modelInterested'] ?? '',
+    source: json['source'] ?? '',
+    status: json['status'] ?? '',
   );
 
   @override
   List<Object?> toSheetRow() {
     return [
       id,
+      date.toIso8601String(),
+      executive,
       customerName,
       phone,
       modelInterested,
+      source,
       status,
-      date.toIso8601String(),
-      handledBy,
     ];
   }
 }
@@ -74,115 +94,267 @@ class Enquiry implements SheetDataMapper {
 // Model for Bookings
 class Booking implements SheetDataMapper {
   final String bookingId;
+  final DateTime bookingDate;
+  final String executive;
   final String customerName;
+  final String phone;
   final String vehicleModel;
   final double bookingAmount;
-  final DateTime bookingDate;
+  final String paymentMode;
+  final String status;
 
   Booking({
     required this.bookingId,
+    required this.bookingDate,
+    required this.executive,
     required this.customerName,
+    required this.phone,
     required this.vehicleModel,
     required this.bookingAmount,
-    required this.bookingDate,
+    required this.paymentMode,
+    required this.status,
   });
 
   factory Booking.fromRow(List<dynamic> row) {
     return Booking(
       bookingId: row.isNotEmpty ? row[0].toString() : '',
-      customerName: row.length > 1 ? row[1].toString() : '',
-      vehicleModel: row.length > 2 ? row[2].toString() : '',
-      bookingAmount: row.length > 3
-          ? double.tryParse(row[3].toString()) ?? 0.0
-          : 0.0,
-      bookingDate: row.length > 4
-          ? DateTime.tryParse(row[4].toString()) ?? DateTime.now()
+      bookingDate: row.length > 1
+          ? _parseDateSafely(row[1].toString())
           : DateTime.now(),
+      executive: row.length > 2 ? row[2].toString() : '',
+      customerName: row.length > 3 ? row[3].toString() : '',
+      phone: row.length > 4 ? row[4].toString() : '',
+      vehicleModel: row.length > 5 ? row[5].toString() : '',
+      bookingAmount: row.length > 6
+          ? _parseDoubleSafely(row[6].toString())
+          : 0.0,
+      paymentMode: row.length > 7 ? row[7].toString() : '',
+      status: row.length > 8 ? row[8].toString() : '',
     );
   }
 
   Map<String, dynamic> toJson() => {
     'bookingId': bookingId,
+    'bookingDate': bookingDate.toIso8601String(),
+    'executive': executive,
     'customerName': customerName,
+    'phone': phone,
     'vehicleModel': vehicleModel,
     'bookingAmount': bookingAmount,
-    'bookingDate': bookingDate.toIso8601String(),
+    'paymentMode': paymentMode,
+    'status': status,
   };
 
   factory Booking.fromJson(Map<String, dynamic> json) => Booking(
-    bookingId: json['bookingId'],
-    customerName: json['customerName'],
-    vehicleModel: json['vehicleModel'],
-    bookingAmount: json['bookingAmount'],
-    bookingDate: DateTime.parse(json['bookingDate']),
+    bookingId: json['bookingId'] ?? '',
+    bookingDate: DateTime.tryParse(json['bookingDate'] ?? '') ?? DateTime.now(),
+    executive: json['executive'] ?? '',
+    customerName: json['customerName'] ?? '',
+    phone: json['phone'] ?? '',
+    vehicleModel: json['vehicleModel'] ?? '',
+    bookingAmount: json['bookingAmount'] ?? 0.0,
+    paymentMode: json['paymentMode'] ?? '',
+    status: json['status'] ?? '',
   );
 
   @override
   List<Object?> toSheetRow() {
     return [
       bookingId,
+      bookingDate.toIso8601String(),
+      executive,
       customerName,
+      phone,
       vehicleModel,
       bookingAmount,
-      bookingDate.toIso8601String(),
+      paymentMode,
+      status,
     ];
   }
 }
 
 // Model for Sold Vehicles
 class Sold implements SheetDataMapper {
-  final String saleId;
-  final String customerName;
-  final String vehicleModel;
-  final double saleAmount;
   final DateTime saleDate;
+  final String customerName;
+  final String mobileNo;
+  final String executiveName;
+  final String vehicleModel;
+  final String category;
+  final String engineNo;
+  final String frameNo;
+  final double vehicleCost;
+  final String exFittings;
+  final String discountOperated;
+  final String downpayment;
+  final String cashHp;
+  final String financierName;
+  final String documentCharges;
+  final String financeDd;
+  final String customerBalance;
+  final String exchangeVehicle;
+  final String exchangeValue;
+  final String exchangeVehicleSoldStatus;
+  final String exchangeVehicleManufacturing;
+  final String invoiceStatus;
+  final String invoiceDate;
+  final String rtoLocation;
+  final String rto;
+  final String registerationNo;
+
+  // Fallbacks for UI compatibility
+  String get saleId => frameNo;
+  double get saleAmount => vehicleCost;
 
   Sold({
-    required this.saleId,
-    required this.customerName,
-    required this.vehicleModel,
-    required this.saleAmount,
     required this.saleDate,
+    required this.customerName,
+    required this.mobileNo,
+    required this.executiveName,
+    required this.vehicleModel,
+    required this.category,
+    required this.engineNo,
+    required this.frameNo,
+    required this.vehicleCost,
+    required this.exFittings,
+    required this.discountOperated,
+    required this.downpayment,
+    required this.cashHp,
+    required this.financierName,
+    required this.documentCharges,
+    required this.financeDd,
+    required this.customerBalance,
+    required this.exchangeVehicle,
+    required this.exchangeValue,
+    required this.exchangeVehicleSoldStatus,
+    required this.exchangeVehicleManufacturing,
+    required this.invoiceStatus,
+    required this.invoiceDate,
+    required this.rtoLocation,
+    required this.rto,
+    required this.registerationNo,
   });
 
   factory Sold.fromRow(List<dynamic> row) {
     return Sold(
-      saleId: row.isNotEmpty ? row[0].toString() : '',
-      customerName: row.length > 1 ? row[1].toString() : '',
-      vehicleModel: row.length > 2 ? row[2].toString() : '',
-      saleAmount: row.length > 3
-          ? double.tryParse(row[3].toString()) ?? 0.0
-          : 0.0,
-      saleDate: row.length > 4
-          ? DateTime.tryParse(row[4].toString()) ?? DateTime.now()
+      saleDate: row.isNotEmpty
+          ? _parseDateSafely(row[0].toString())
           : DateTime.now(),
+      customerName: row.length > 1 ? row[1].toString() : '',
+      mobileNo: row.length > 2 ? row[2].toString() : '',
+      executiveName: row.length > 3 ? row[3].toString() : '',
+      vehicleModel: row.length > 4 ? row[4].toString() : '',
+      category: row.length > 5 ? row[5].toString() : '',
+      engineNo: row.length > 6 ? row[6].toString() : '',
+      frameNo: row.length > 7 ? row[7].toString() : '',
+      vehicleCost: row.length > 8 ? _parseDoubleSafely(row[8].toString()) : 0.0,
+      exFittings: row.length > 9 ? row[9].toString() : '',
+      discountOperated: row.length > 10 ? row[10].toString() : '',
+      downpayment: row.length > 11 ? row[11].toString() : '',
+      cashHp: row.length > 12 ? row[12].toString() : '',
+      financierName: row.length > 13 ? row[13].toString() : '',
+      documentCharges: row.length > 14 ? row[14].toString() : '',
+      financeDd: row.length > 15 ? row[15].toString() : '',
+      customerBalance: row.length > 16 ? row[16].toString() : '',
+      exchangeVehicle: row.length > 17 ? row[17].toString() : '',
+      exchangeValue: row.length > 18 ? row[18].toString() : '',
+      exchangeVehicleSoldStatus: row.length > 19 ? row[19].toString() : '',
+      exchangeVehicleManufacturing: row.length > 20 ? row[20].toString() : '',
+      invoiceStatus: row.length > 21 ? row[21].toString() : '',
+      invoiceDate: row.length > 22 ? row[22].toString() : '',
+      rtoLocation: row.length > 23 ? row[23].toString() : '',
+      rto: row.length > 24 ? row[24].toString() : '',
+      registerationNo: row.length > 25 ? row[25].toString() : '',
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'saleId': saleId,
-    'customerName': customerName,
-    'vehicleModel': vehicleModel,
-    'saleAmount': saleAmount,
     'saleDate': saleDate.toIso8601String(),
+    'customerName': customerName,
+    'mobileNo': mobileNo,
+    'executiveName': executiveName,
+    'vehicleModel': vehicleModel,
+    'category': category,
+    'engineNo': engineNo,
+    'frameNo': frameNo,
+    'vehicleCost': vehicleCost,
+    'exFittings': exFittings,
+    'discountOperated': discountOperated,
+    'downpayment': downpayment,
+    'cashHp': cashHp,
+    'financierName': financierName,
+    'documentCharges': documentCharges,
+    'financeDd': financeDd,
+    'customerBalance': customerBalance,
+    'exchangeVehicle': exchangeVehicle,
+    'exchangeValue': exchangeValue,
+    'exchangeVehicleSoldStatus': exchangeVehicleSoldStatus,
+    'exchangeVehicleManufacturing': exchangeVehicleManufacturing,
+    'invoiceStatus': invoiceStatus,
+    'invoiceDate': invoiceDate,
+    'rtoLocation': rtoLocation,
+    'rto': rto,
+    'registerationNo': registerationNo,
   };
 
   factory Sold.fromJson(Map<String, dynamic> json) => Sold(
-    saleId: json['saleId'],
-    customerName: json['customerName'],
-    vehicleModel: json['vehicleModel'],
-    saleAmount: json['saleAmount'],
-    saleDate: DateTime.parse(json['saleDate']),
+    saleDate: DateTime.tryParse(json['saleDate'] ?? '') ?? DateTime.now(),
+    customerName: json['customerName'] ?? '',
+    mobileNo: json['mobileNo'] ?? '',
+    executiveName: json['executiveName'] ?? '',
+    vehicleModel: json['vehicleModel'] ?? '',
+    category: json['category'] ?? '',
+    engineNo: json['engineNo'] ?? '',
+    frameNo: json['frameNo'] ?? '',
+    vehicleCost: json['vehicleCost'] ?? 0.0,
+    exFittings: json['exFittings'] ?? '',
+    discountOperated: json['discountOperated'] ?? '',
+    downpayment: json['downpayment'] ?? '',
+    cashHp: json['cashHp'] ?? '',
+    financierName: json['financierName'] ?? '',
+    documentCharges: json['documentCharges'] ?? '',
+    financeDd: json['financeDd'] ?? '',
+    customerBalance: json['customerBalance'] ?? '',
+    exchangeVehicle: json['exchangeVehicle'] ?? '',
+    exchangeValue: json['exchangeValue'] ?? '',
+    exchangeVehicleSoldStatus: json['exchangeVehicleSoldStatus'] ?? '',
+    exchangeVehicleManufacturing: json['exchangeVehicleManufacturing'] ?? '',
+    invoiceStatus: json['invoiceStatus'] ?? '',
+    invoiceDate: json['invoiceDate'] ?? '',
+    rtoLocation: json['rtoLocation'] ?? '',
+    rto: json['rto'] ?? '',
+    registerationNo: json['registerationNo'] ?? '',
   );
 
   @override
   List<Object?> toSheetRow() {
     return [
-      saleId,
-      customerName,
-      vehicleModel,
-      saleAmount,
       saleDate.toIso8601String(),
+      customerName,
+      mobileNo,
+      executiveName,
+      vehicleModel,
+      category,
+      engineNo,
+      frameNo,
+      vehicleCost,
+      exFittings,
+      discountOperated,
+      downpayment,
+      cashHp,
+      financierName,
+      documentCharges,
+      financeDd,
+      customerBalance,
+      exchangeVehicle,
+      exchangeValue,
+      exchangeVehicleSoldStatus,
+      exchangeVehicleManufacturing,
+      invoiceStatus,
+      invoiceDate,
+      rtoLocation,
+      rto,
+      registerationNo,
     ];
   }
 }
@@ -191,52 +363,69 @@ class Sold implements SheetDataMapper {
 class Stock implements SheetDataMapper {
   final String vehicleModel;
   final String color;
-  final String chassisNumber;
-  final String engineNumber;
-  final String location;
-  final String status; // e.g., Available, Blocked, In Transit
-  final int daysInStock;
+  final String frameNo;
+  final String engineNo;
+  final String quantity;
+  final String tvsInvoiceDate;
+  final String agingStockDays;
+  final String dealerInvoiceStatus;
+  final String pdiStatus;
+
+  // UI Compatibility Setters
+  String get chassisNumber => frameNo;
+  String get engineNumber => engineNo;
+  String get location => dealerInvoiceStatus;
+  String get status => pdiStatus.isEmpty ? dealerInvoiceStatus : pdiStatus;
+  int get daysInStock => int.tryParse(agingStockDays) ?? 0;
 
   Stock({
     required this.vehicleModel,
     required this.color,
-    required this.chassisNumber,
-    required this.engineNumber,
-    required this.location,
-    required this.status,
-    required this.daysInStock,
+    required this.frameNo,
+    required this.engineNo,
+    required this.quantity,
+    required this.tvsInvoiceDate,
+    required this.agingStockDays,
+    required this.dealerInvoiceStatus,
+    required this.pdiStatus,
   });
 
   factory Stock.fromRow(List<dynamic> row) {
     return Stock(
       vehicleModel: row.isNotEmpty ? row[0].toString() : '',
       color: row.length > 1 ? row[1].toString() : '',
-      chassisNumber: row.length > 2 ? row[2].toString() : '',
-      engineNumber: row.length > 3 ? row[3].toString() : '',
-      location: row.length > 4 ? row[4].toString() : '',
-      status: row.length > 5 ? row[5].toString() : '',
-      daysInStock: row.length > 6 ? int.tryParse(row[6].toString()) ?? 0 : 0,
+      frameNo: row.length > 2 ? row[2].toString() : '',
+      engineNo: row.length > 3 ? row[3].toString() : '',
+      quantity: row.length > 4 ? row[4].toString() : '',
+      tvsInvoiceDate: row.length > 5 ? row[5].toString() : '',
+      agingStockDays: row.length > 6 ? row[6].toString() : '',
+      dealerInvoiceStatus: row.length > 7 ? row[7].toString() : '',
+      pdiStatus: row.length > 8 ? row[8].toString() : '',
     );
   }
 
   Map<String, dynamic> toJson() => {
     'vehicleModel': vehicleModel,
     'color': color,
-    'chassisNumber': chassisNumber,
-    'engineNumber': engineNumber,
-    'location': location,
-    'status': status,
-    'daysInStock': daysInStock,
+    'frameNo': frameNo,
+    'engineNo': engineNo,
+    'quantity': quantity,
+    'tvsInvoiceDate': tvsInvoiceDate,
+    'agingStockDays': agingStockDays,
+    'dealerInvoiceStatus': dealerInvoiceStatus,
+    'pdiStatus': pdiStatus,
   };
 
   factory Stock.fromJson(Map<String, dynamic> json) => Stock(
-    vehicleModel: json['vehicleModel'],
-    color: json['color'],
-    chassisNumber: json['chassisNumber'],
-    engineNumber: json['engineNumber'],
-    location: json['location'],
-    status: json['status'],
-    daysInStock: json['daysInStock'],
+    vehicleModel: json['vehicleModel'] ?? '',
+    color: json['color'] ?? '',
+    frameNo: json['frameNo'] ?? '',
+    engineNo: json['engineNo'] ?? '',
+    quantity: json['quantity'] ?? '',
+    tvsInvoiceDate: json['tvsInvoiceDate'] ?? '',
+    agingStockDays: json['agingStockDays'] ?? '',
+    dealerInvoiceStatus: json['dealerInvoiceStatus'] ?? '',
+    pdiStatus: json['pdiStatus'] ?? '',
   );
 
   @override
@@ -244,11 +433,13 @@ class Stock implements SheetDataMapper {
     return [
       vehicleModel,
       color,
-      chassisNumber,
-      engineNumber,
-      location,
-      status,
-      daysInStock,
+      frameNo,
+      engineNo,
+      quantity,
+      tvsInvoiceDate,
+      agingStockDays,
+      dealerInvoiceStatus,
+      pdiStatus,
     ];
   }
 }
