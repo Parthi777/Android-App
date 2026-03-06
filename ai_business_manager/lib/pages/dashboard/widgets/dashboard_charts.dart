@@ -20,23 +20,26 @@ class MonthlyTrendChart extends StatelessWidget {
     final maxY = max(maxS, max(maxB, maxE));
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Legend
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            _buildLegendItem(Colors.green, 'Sales'),
-            const SizedBox(width: 16),
-            _buildLegendItem(Colors.blue, 'Bookings'),
-            const SizedBox(width: 16),
-            _buildLegendItem(Colors.orange, 'Enquiries'),
+            _buildLegendItem(Colors.indigoAccent, 'Sales'),
+            const SizedBox(width: 12),
+            _buildLegendItem(Colors.purpleAccent, 'Bookings'),
+            const SizedBox(width: 12),
+            _buildLegendItem(Colors.cyan, 'Enquiries'),
           ],
         ),
         const SizedBox(height: 16),
         Expanded(
           child: LineChart(
             LineChartData(
-              gridData: const FlGridData(show: true, drawVerticalLine: false),
+              gridData: const FlGridData(
+                show: false,
+              ), // Clean look, no grid lines
               titlesData: FlTitlesData(
                 show: true,
                 topTitles: const AxisTitles(
@@ -45,50 +48,85 @@ class MonthlyTrendChart extends StatelessWidget {
                 rightTitles: const AxisTitles(
                   sideTitles: SideTitles(showTitles: false),
                 ),
-                bottomTitles: AxisTitles(
+                leftTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
-                    reservedSize: 30,
+                    reservedSize: 40,
                     getTitlesWidget: (value, meta) {
-                      final int index = value.toInt();
-                      if (index < 0 || index >= stats.last30DaysLabels.length) {
-                        return const SizedBox.shrink();
-                      }
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
+                      return SideTitleWidget(
+                        meta: meta,
                         child: Text(
-                          stats.last30DaysLabels[index],
+                          value.toInt().toString(),
                           style: TextStyle(
                             fontSize: 10,
-                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[500],
                           ),
                         ),
                       );
                     },
                   ),
                 ),
-                leftTitles: AxisTitles(
+                bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
-                    reservedSize: 30,
+                    reservedSize: 50,
+                    interval: 6, // Show fewer labels for cleaner look
                     getTitlesWidget: (value, meta) {
-                      if (value % 1 != 0)
-                        return const SizedBox.shrink(); // Only show integers
-                      return Text(
-                        value.toInt().toString(),
-                        style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                      final int index = value.toInt();
+                      if (index < 0 || index >= stats.last30DaysLabels.length) {
+                        return const SizedBox.shrink();
+                      }
+                      return SideTitleWidget(
+                        meta: meta,
+                        space: 8,
+                        angle: -1.0, // Stricter angle to prevent overlap
+                        child: Text(
+                          stats.last30DaysLabels[index],
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[600],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       );
                     },
                   ),
                 ),
               ),
+              lineTouchData: LineTouchData(
+                touchTooltipData: LineTouchTooltipData(
+                  getTooltipItems: (touchedSpots) {
+                    return touchedSpots.map((LineBarSpot touchedSpot) {
+                      final textStyle = TextStyle(
+                        color: touchedSpot.bar.color ?? Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      );
+                      int index = touchedSpot.x.toInt();
+                      String date = "";
+                      if (index >= 0 && index < stats.last30DaysLabels.length) {
+                        date = stats.last30DaysLabels[index];
+                      }
+                      return LineTooltipItem(
+                        '$date\\n${touchedSpot.y.toInt()}',
+                        textStyle,
+                      );
+                    }).toList();
+                  },
+                ),
+              ),
               borderData: FlBorderData(show: false),
               minY: 0,
-              maxY: maxY + (maxY * 0.2), // Add a 20% buffer on top
+              maxY: maxY + (maxY * 0.3), // Add a 30% buffer on top
               lineBarsData: [
-                _createLineData(stats.monthlySalesTrend, Colors.green),
-                _createLineData(stats.monthlyBookingsTrend, Colors.blue),
-                _createLineData(stats.monthlyEnquiriesTrend, Colors.orange),
+                _createLineData(stats.monthlySalesTrend, Colors.indigoAccent),
+                _createLineData(
+                  stats.monthlyBookingsTrend,
+                  Colors.purpleAccent,
+                ),
+                _createLineData(stats.monthlyEnquiriesTrend, Colors.cyan),
               ],
             ),
           ),
@@ -105,12 +143,19 @@ class MonthlyTrendChart extends StatelessWidget {
           .map((e) => FlSpot(e.key.toDouble(), e.value.toDouble()))
           .toList(),
       isCurved: true,
-      curveSmoothness: 0.2,
+      curveSmoothness: 0.35, // More smooth
       color: color,
-      barWidth: 3,
+      barWidth: 3.5,
       isStrokeCapRound: true,
       dotData: const FlDotData(show: false),
-      belowBarData: BarAreaData(show: true, color: color.withOpacity(0.08)),
+      belowBarData: BarAreaData(
+        show: true,
+        gradient: LinearGradient(
+          colors: [color.withOpacity(0.3), color.withOpacity(0.0)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
     );
   }
 

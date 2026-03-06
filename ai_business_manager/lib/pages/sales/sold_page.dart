@@ -6,12 +6,19 @@ import '../../providers/data_providers.dart';
 import '../../providers/branch_provider.dart';
 import '../../utils/export_utils.dart';
 
+import '../../models/sheet_data_models.dart';
+
 class SoldPage extends HookConsumerWidget {
-  const SoldPage({super.key});
+  final List<Sold>? preFilterData;
+  final String? drillDownTitle;
+
+  const SoldPage({super.key, this.preFilterData, this.drillDownTitle});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final soldAsync = ref.watch(soldProvider);
+    final AsyncValue<List<Sold>> soldAsync = preFilterData != null
+        ? AsyncData(preFilterData!)
+        : ref.watch(soldProvider);
     final branch = ref.watch(branchProvider);
     final dateFormat = DateFormat('dd MMM yyyy');
     final searchQuery = useState('');
@@ -19,7 +26,7 @@ class SoldPage extends HookConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Sold Vehicles - ${branch?.name ?? ''}'),
+        title: Text(drillDownTitle ?? 'Sold Vehicles - ${branch?.name ?? ''}'),
         actions: [
           if (selectedDateRange.value != null)
             IconButton(
@@ -43,13 +50,14 @@ class SoldPage extends HookConsumerWidget {
             },
             tooltip: 'Filter by Date Range',
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              ref.invalidate(soldProvider);
-            },
-            tooltip: 'Refresh Data',
-          ),
+          if (preFilterData == null)
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                ref.invalidate(soldProvider);
+              },
+              tooltip: 'Refresh Data',
+            ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.download),
             tooltip: 'Export Data',

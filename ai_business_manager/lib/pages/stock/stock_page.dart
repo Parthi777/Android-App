@@ -6,19 +6,28 @@ import '../../providers/data_providers.dart';
 import '../../providers/branch_provider.dart';
 import '../../utils/export_utils.dart';
 
+import '../../models/sheet_data_models.dart';
+
 class StockPage extends HookConsumerWidget {
-  const StockPage({super.key});
+  final List<Stock>? preFilterData;
+  final String? drillDownTitle;
+
+  const StockPage({super.key, this.preFilterData, this.drillDownTitle});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stockAsync = ref.watch(stockProvider);
+    final AsyncValue<List<Stock>> stockAsync = preFilterData != null
+        ? AsyncData(preFilterData!)
+        : ref.watch(stockProvider);
     final branch = ref.watch(branchProvider);
     final searchQuery = useState('');
     final selectedDateRange = useState<DateTimeRange?>(null);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Stock Available - ${branch?.name ?? ''}'),
+        title: Text(
+          drillDownTitle ?? 'Stock Available - ${branch?.name ?? ''}',
+        ),
         actions: [
           if (selectedDateRange.value != null)
             IconButton(
@@ -42,13 +51,14 @@ class StockPage extends HookConsumerWidget {
             },
             tooltip: 'Filter by Date Range',
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              ref.invalidate(stockProvider);
-            },
-            tooltip: 'Refresh Data',
-          ),
+          if (preFilterData == null)
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                ref.invalidate(stockProvider);
+              },
+              tooltip: 'Refresh Data',
+            ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.download),
             tooltip: 'Export Data',

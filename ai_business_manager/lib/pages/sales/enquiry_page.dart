@@ -6,12 +6,19 @@ import '../../providers/data_providers.dart';
 import '../../providers/branch_provider.dart';
 import '../../utils/export_utils.dart';
 
+import '../../models/sheet_data_models.dart';
+
 class EnquiryPage extends HookConsumerWidget {
-  const EnquiryPage({super.key});
+  final List<Enquiry>? preFilterData;
+  final String? drillDownTitle;
+
+  const EnquiryPage({super.key, this.preFilterData, this.drillDownTitle});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final enquiriesAsync = ref.watch(enquiriesProvider);
+    final AsyncValue<List<Enquiry>> enquiriesAsync = preFilterData != null
+        ? AsyncData(preFilterData!)
+        : ref.watch(enquiriesProvider);
     final branch = ref.watch(branchProvider);
     final dateFormat = DateFormat('dd MMM yyyy');
     final searchQuery = useState('');
@@ -19,7 +26,7 @@ class EnquiryPage extends HookConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Enquiries - ${branch?.name ?? ''}'),
+        title: Text(drillDownTitle ?? 'Enquiries - ${branch?.name ?? ''}'),
         actions: [
           if (selectedDateRange.value != null)
             IconButton(
@@ -43,13 +50,14 @@ class EnquiryPage extends HookConsumerWidget {
             },
             tooltip: 'Filter by Date Range',
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              ref.invalidate(enquiriesProvider);
-            },
-            tooltip: 'Refresh Data',
-          ),
+          if (preFilterData == null)
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                ref.invalidate(enquiriesProvider);
+              },
+              tooltip: 'Refresh Data',
+            ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.download),
             tooltip: 'Export Data',

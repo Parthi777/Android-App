@@ -1,6 +1,77 @@
+import 'package:flutter/foundation.dart';
+
 DateTime _parseDateSafely(String value) {
-  final date = DateTime.tryParse(value);
-  if (date != null) return date;
+  debugPrint("Raw date from sheet: '$value'");
+  if (value.isEmpty) return DateTime.now();
+
+  // Try default ISO parsing first
+  final isoDate = DateTime.tryParse(value);
+  if (isoDate != null) return isoDate;
+
+  // Try parsing common local formats like: dd/MM/yyyy, dd-MMM-yyyy, or dd-MM-yyyy
+  try {
+    final cleanValue = value.trim();
+    List<String> parts = [];
+    if (cleanValue.contains('/')) {
+      parts = cleanValue.split('/');
+    } else if (cleanValue.contains('-')) {
+      parts = cleanValue.split('-');
+    } else if (cleanValue.contains(' ')) {
+      parts = cleanValue.split(' ');
+    }
+
+    if (parts.length >= 3) {
+      int first = int.parse(parts[0]);
+
+      // Handle alphanumeric month (e.g. 'Feb', 'Mar')
+      int second = 0;
+      final monthStr = parts[1].toLowerCase();
+      const monthMap = {
+        'jan': 1,
+        'feb': 2,
+        'mar': 3,
+        'apr': 4,
+        'may': 5,
+        'jun': 6,
+        'jul': 7,
+        'aug': 8,
+        'sep': 9,
+        'oct': 10,
+        'nov': 11,
+        'dec': 12,
+      };
+
+      if (monthStr.length >= 3 &&
+          monthMap.containsKey(monthStr.substring(0, 3))) {
+        second = monthMap[monthStr.substring(0, 3)]!;
+      } else {
+        second = int.parse(parts[1]);
+      }
+
+      // Extract year, removing any time parts attached to the end
+      int year = int.parse(parts[2].split(RegExp(r'\s+'))[0]);
+
+      int day = first;
+      int month = second;
+
+      // If month component is > 12, it's likely MM/dd/yyyy format.
+      // If year is somehow in the first place (yyyy/MM/dd) ISO parser usually catches it,
+      // but just in case:
+      if (first > 31) {
+        year = first;
+        month = second;
+        day = int.parse(parts[2].split(RegExp(r'\s+'))[0]);
+      } else if (month > 12) {
+        day = second;
+        month = first;
+      }
+
+      return DateTime(year, month, day);
+    }
+  } catch (e) {
+    // Ignore error
+  }
+
   return DateTime.now(); // Fallback date if sheet format is not standard
 }
 
@@ -116,6 +187,7 @@ class Booking implements SheetDataMapper {
   });
 
   factory Booking.fromRow(List<dynamic> row) {
+    debugPrint('Booking raw row: $row');
     return Booking(
       bookingId: row.isNotEmpty ? row[0].toString() : '',
       bookingDate: row.length > 1
@@ -236,6 +308,7 @@ class Sold implements SheetDataMapper {
   });
 
   factory Sold.fromRow(List<dynamic> row) {
+    debugPrint('Sold raw row: $row');
     return Sold(
       saleDate: row.isNotEmpty
           ? _parseDateSafely(row[0].toString())

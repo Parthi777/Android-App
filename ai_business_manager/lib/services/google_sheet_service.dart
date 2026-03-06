@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:googleapis/sheets/v4.dart' as sheets;
 import 'package:googleapis_auth/auth_io.dart';
@@ -30,6 +31,9 @@ class GoogleSheetService {
     String spreadsheetId,
     String range,
   ) async {
+    if (_sheetsApi == null) {
+      await initialize('assets/credentials.json');
+    }
     if (_sheetsApi == null) {
       throw Exception('Google Sheets API is not initialized.');
     }
@@ -115,11 +119,23 @@ class GoogleSheetService {
     // Skip the header row (assuming first row is header)
     if (rows.length <= 1) return [];
 
-    return rows.skip(1).map((row) => fromRow(row)).toList();
+    final List<T> mappedList = [];
+    for (final row in rows.skip(1)) {
+      try {
+        mappedList.add(fromRow(row));
+      } catch (e) {
+        debugPrint('Failed to map row: $row. Error: $e');
+      }
+    }
+    debugPrint('Fetched ${mappedList.length} items for sheet: $sheetName');
+    return mappedList;
   }
 
   // Retrieve the Sheet Name from its GID
   Future<String?> getSheetNameFromGid(String spreadsheetId, String gid) async {
+    if (_sheetsApi == null) {
+      await initialize('assets/credentials.json');
+    }
     if (_sheetsApi == null) {
       throw Exception('Google Sheets API is not initialized.');
     }

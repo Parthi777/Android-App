@@ -1,6 +1,23 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'data_providers.dart';
+
+// New provider to track the selected month for the dashboard
+class SelectedDashboardMonthNotifier extends Notifier<DateTime> {
+  @override
+  DateTime build() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, 1);
+  }
+
+  void setMonth(DateTime month) {
+    state = DateTime(month.year, month.month, 1);
+  }
+}
+
+final selectedDashboardMonthProvider =
+    NotifierProvider<SelectedDashboardMonthNotifier, DateTime>(
+      SelectedDashboardMonthNotifier.new,
+    );
 
 class DashboardStats {
   // Original properties needed by ai_chat_modal.dart
@@ -8,18 +25,25 @@ class DashboardStats {
   final int totalBookings;
   final double totalBookingAmount;
 
-  // Monthly (Last 30 Days) / Total properties
+  // Today's properties
+  final int todaySalesCount;
+  final double todayRevenue;
+  final int todayBookingsCount;
+  final int todayEnquiriesCount;
+
+  // Monthly properties (Based on selected month)
   final int monthlySalesCount;
   final double monthlyRevenue;
   final int monthlyBookingsCount;
   final int activeEnquiriesCount;
   final int currentStockCount;
 
-  // Trend lines (Last 30 Days)
+  // Trend lines (Based on days in selected month)
   final List<int> monthlySalesTrend;
   final List<int> monthlyBookingsTrend;
   final List<int> monthlyEnquiriesTrend;
-  final List<String> last30DaysLabels;
+  final List<String>
+  last30DaysLabels; // Keeping name for compatibility, but holds month labels
 
   // Breakdown
   final Map<String, int> topSellingModels;
@@ -28,6 +52,10 @@ class DashboardStats {
     this.totalEnquiries = 0,
     this.totalBookings = 0,
     this.totalBookingAmount = 0.0,
+    this.todaySalesCount = 0,
+    this.todayRevenue = 0.0,
+    this.todayBookingsCount = 0,
+    this.todayEnquiriesCount = 0,
     this.monthlySalesCount = 0,
     this.monthlyRevenue = 0.0,
     this.monthlyBookingsCount = 0,
@@ -46,8 +74,14 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
   final bookings = ref.watch(bookingsProvider).value ?? [];
   final soldList = ref.watch(soldProvider).value ?? [];
   final stockList = ref.watch(stockProvider).value ?? [];
+  final selectedMonth = ref.watch(selectedDashboardMonthProvider);
 
   final today = DateTime.now();
+
+  int tSalesCount = 0;
+  double tRevenue = 0.0;
+  int tBookingsCount = 0;
+  int tEnquiriesCount = 0;
 
   int mSalesCount = 0;
   double mRevenue = 0.0;
@@ -57,20 +91,36 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
 
   Map<String, int> sellingModels = {};
 
-  final last30DaysLabels = <String>[];
-  final mSalesTrend = List.filled(30, 0);
-  final mBookingsTrend = List.filled(30, 0);
-  final mEnquiriesTrend = List.filled(30, 0);
+  final daysInMonth = DateTime(
+    selectedMonth.year,
+    selectedMonth.month + 1,
+    0,
+  ).day;
 
-  // Pre-fill labels for the last 30 days
-  for (int i = 29; i >= 0; i--) {
-    final date = today.subtract(Duration(days: i));
-    // Only show label every 5 days for space
-    if (i % 5 == 0 || i == 0) {
-      last30DaysLabels.add(DateFormat('MM/dd').format(date));
+  final monthLabels = <String>[];
+  final mSalesTrend = List.filled(daysInMonth, 0);
+  final mBookingsTrend = List.filled(daysInMonth, 0);
+  final mEnquiriesTrend = List.filled(daysInMonth, 0);
+
+  // Pre-fill labels for the selected month days
+  for (int i = 1; i <= daysInMonth; i++) {
+    if (i % 5 == 0 || i == 1) {
+      monthLabels.add('\$i/\${selectedMonth.month}');
     } else {
-      last30DaysLabels.add('');
+      monthLabels.add('');
     }
+  }
+
+  // Helper to check if date is today
+  bool isToday(DateTime date) {
+    return date.year == today.year &&
+        date.month == today.month &&
+        date.day == today.day;
+  }
+
+  // Helper to check if date is in selected month
+  bool isInSelectedMonth(DateTime date) {
+    return date.year == selectedMonth.year && date.month == selectedMonth.month;
   }
 
   // Aggregate Enquiries
@@ -80,32 +130,48 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
       aEnquiriesCount++;
     }
 
-    final diff = today.difference(enquiry.date).inDays;
-    if (diff >= 0 && diff < 30) {
-      final index = 29 - diff;
-      mEnquiriesTrend[index]++;
+    if (isToday(enquiry.date)) {
+      tEnquiriesCount++;
+    }
+
+    if (isInSelectedMonth(enquiry.date)) {
+      final idx = enquiry.date.day - 1;
+      if (idx >= 0 && idx < daysInMonth) {
+        mEnquiriesTrend[idx]++;
+      }
     }
   }
 
   // Aggregate Bookings
   for (final booking in bookings) {
-    final diff = today.difference(booking.bookingDate).inDays;
-    if (diff >= 0 && diff < 30) {
+    if (isToday(booking.bookingDate)) {
+      tBookingsCount++;
+    }
+
+    if (isInSelectedMonth(booking.bookingDate)) {
       mBookingsCount++;
-      final index = 29 - diff;
-      mBookingsTrend[index]++;
+      final idx = booking.bookingDate.day - 1;
+      if (idx >= 0 && idx < daysInMonth) {
+        mBookingsTrend[idx]++;
+      }
     }
   }
 
   // Aggregate Sold
   for (final sold in soldList) {
-    final diff = today.difference(sold.saleDate).inDays;
-    if (diff >= 0 && diff < 30) {
+    if (isToday(sold.saleDate)) {
+      tSalesCount++;
+      tRevenue += sold.vehicleCost;
+    }
+
+    if (isInSelectedMonth(sold.saleDate)) {
       mSalesCount++;
       mRevenue += sold.vehicleCost;
 
-      final index = 29 - diff;
-      mSalesTrend[index]++;
+      final idx = sold.saleDate.day - 1;
+      if (idx >= 0 && idx < daysInMonth) {
+        mSalesTrend[idx]++;
+      }
     }
 
     // Top Selling Models Donut Chart
@@ -130,6 +196,10 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
     totalEnquiries: enquiries.length,
     totalBookings: bookings.length,
     totalBookingAmount: bookingAmount,
+    todaySalesCount: tSalesCount,
+    todayRevenue: tRevenue,
+    todayBookingsCount: tBookingsCount,
+    todayEnquiriesCount: tEnquiriesCount,
     monthlySalesCount: mSalesCount,
     monthlyRevenue: mRevenue,
     monthlyBookingsCount: mBookingsCount,
@@ -138,7 +208,7 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
     monthlySalesTrend: mSalesTrend,
     monthlyBookingsTrend: mBookingsTrend,
     monthlyEnquiriesTrend: mEnquiriesTrend,
-    last30DaysLabels: last30DaysLabels,
+    last30DaysLabels: monthLabels,
     topSellingModels: sellingModels,
   );
 });
