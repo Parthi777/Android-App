@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
+import '../providers/branch_provider.dart';
 import 'ai_chat_modal.dart';
 
 class AppLayout extends ConsumerWidget {
@@ -12,11 +14,14 @@ class AppLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bool isWideScreen = MediaQuery.of(context).size.width >= 800;
+    final activeBranch = ref.watch(branchProvider);
 
     return Scaffold(
       appBar: isWideScreen
           ? null
           : AppBar(
+              toolbarHeight: 90,
+              centerTitle: true,
               leading: Builder(
                 builder: (BuildContext context) {
                   return IconButton(
@@ -30,25 +35,28 @@ class AppLayout extends ConsumerWidget {
                   );
                 },
               ),
-              title: Row(
+              title: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.flash_on, color: Theme.of(context).primaryColor),
-                  const SizedBox(width: 8),
                   Text(
                     'Dhaara',
-                    style: TextStyle(
+                    style: GoogleFonts.pacifico(
+                      fontSize: 28,
                       color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
                     ),
                   ),
+                  if (activeBranch != null)
+                    Text(
+                      activeBranch.name,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                 ],
               ),
-              actions: [
-                IconButton(icon: const Icon(Icons.search), onPressed: () {}),
-                const SizedBox(width: 8),
-              ],
+              actions: [const SizedBox(width: 8)],
             ),
       drawer: isWideScreen ? null : const AppDrawer(),
       body: Row(
@@ -72,6 +80,10 @@ class AppDrawer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final activeBranch = ref.watch(branchProvider);
+    final branches = ref.watch(branchesListProvider);
+    final branchNotifier = ref.read(branchProvider.notifier);
+
     return Drawer(
       child: SafeArea(
         child: Column(
@@ -79,18 +91,34 @@ class AppDrawer extends ConsumerWidget {
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.only(
+                left: 16.0,
+                right: 8.0,
+                top: 24.0,
+                bottom: 8.0,
+              ),
               child: Row(
                 children: [
-                  Icon(Icons.flash_on, color: Theme.of(context).primaryColor),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Dhaara',
-                    style: TextStyle(
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Dhaara',
+                        style: GoogleFonts.pacifico(
+                          fontSize: 28,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                      if (activeBranch != null)
+                        Text(
+                          activeBranch.name,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                    ],
                   ),
                   const Spacer(),
                   IconButton(
@@ -101,7 +129,85 @@ class AppDrawer extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+
+            // Branch dropdown – only when more than one branch is configured
+            if (branches.length > 1)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).primaryColor.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 4.0,
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: activeBranch?.id,
+                      icon: Icon(
+                        Icons.swap_horiz_rounded,
+                        color: Theme.of(context).primaryColor,
+                        size: 20,
+                      ),
+                      hint: const Text('Select Branch'),
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                      items: branches.map((b) {
+                        return DropdownMenuItem<String>(
+                          value: b.id,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.store_rounded,
+                                size: 16,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  b.name,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (selectedId) {
+                        final selected = branches.firstWhere(
+                          (b) => b.id == selectedId,
+                        );
+                        branchNotifier.setActiveBranch(selected);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Switched to ${selected.name}'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 8),
+
             // Menu Items
             Expanded(
               child: ListView(
@@ -131,14 +237,12 @@ class AppDrawer extends ConsumerWidget {
                       _MenuItem(
                         icon: Icons.book_online_outlined,
                         title: 'Bookings',
-                        route:
-                            '/sales/bookings', // Assuming this route exists or will be added
+                        route: '/sales/bookings',
                       ),
                       _MenuItem(
                         icon: Icons.sell_outlined,
                         title: 'Sold',
-                        route:
-                            '/sales/sold', // Assuming this route exists or will be added
+                        route: '/sales/sold',
                       ),
                     ],
                   ),

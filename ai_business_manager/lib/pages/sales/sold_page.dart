@@ -11,8 +11,14 @@ import '../../models/sheet_data_models.dart';
 class SoldPage extends HookConsumerWidget {
   final List<Sold>? preFilterData;
   final String? drillDownTitle;
+  final DateTimeRange? initialDateRange;
 
-  const SoldPage({super.key, this.preFilterData, this.drillDownTitle});
+  const SoldPage({
+    super.key,
+    this.preFilterData,
+    this.drillDownTitle,
+    this.initialDateRange,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -22,7 +28,7 @@ class SoldPage extends HookConsumerWidget {
     final branch = ref.watch(branchProvider);
     final dateFormat = DateFormat('dd MMM yyyy');
     final searchQuery = useState('');
-    final selectedDateRange = useState<DateTimeRange?>(null);
+    final selectedDateRange = useState<DateTimeRange?>(initialDateRange);
 
     return Scaffold(
       appBar: AppBar(
@@ -43,6 +49,27 @@ class SoldPage extends HookConsumerWidget {
                 initialDateRange: selectedDateRange.value,
                 firstDate: DateTime(2000),
                 lastDate: DateTime(2100),
+                builder: (context, child) {
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      colorScheme: Theme.of(context).colorScheme.copyWith(
+                        primary: const Color(
+                          0xFFFF8B8B,
+                        ), // Soft Coral for highlights
+                        onPrimary: Colors.white,
+                        onSurface: const Color(0xFF232323),
+                      ),
+                      textButtonTheme: TextButtonThemeData(
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(
+                            0xFFFF8B8B,
+                          ), // Soft coral buttons
+                        ),
+                      ),
+                    ),
+                    child: child!,
+                  );
+                },
               );
               if (range != null) {
                 selectedDateRange.value = range;

@@ -48,116 +48,93 @@ class _StockDistributionChartState extends State<StockDistributionChart> {
       Colors.grey,
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        Text(
-          'Stock Distribution',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
-          ),
-        ),
-        const SizedBox(height: 16),
         Expanded(
-          child: Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: PieChart(
-                  PieChartData(
-                    pieTouchData: PieTouchData(
-                      touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                        setState(() {
-                          if (pieTouchResponse == null ||
-                              pieTouchResponse.touchedSection == null) {
-                            touchedIndex = -1;
-                            return;
-                          }
-                          touchedIndex = pieTouchResponse
-                              .touchedSection!
-                              .touchedSectionIndex;
+          flex: 3,
+          child: PieChart(
+            PieChartData(
+              pieTouchData: PieTouchData(
+                touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                  setState(() {
+                    if (pieTouchResponse == null ||
+                        pieTouchResponse.touchedSection == null) {
+                      touchedIndex = -1;
+                      return;
+                    }
+                    touchedIndex =
+                        pieTouchResponse.touchedSection!.touchedSectionIndex;
 
-                          if (event is FlTapUpEvent &&
-                              touchedIndex >= 0 &&
-                              touchedIndex < topEntries.length) {
-                            final modelName = topEntries[touchedIndex].key;
-                            final filteredStock =
-                                topEntries[touchedIndex].value;
+                    if (event is FlTapUpEvent &&
+                        touchedIndex >= 0 &&
+                        touchedIndex < topEntries.length) {
+                      final modelName = topEntries[touchedIndex].key;
+                      final filteredStock = topEntries[touchedIndex].value;
 
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => StockPage(
-                                  preFilterData: filteredStock,
-                                  drillDownTitle: "Stock: $modelName",
-                                ),
-                              ),
-                            );
-                          }
-                        });
-                      },
-                    ),
-                    borderData: FlBorderData(show: false),
-                    sectionsSpace: 2,
-                    centerSpaceRadius: 30,
-                    sections: topEntries.asMap().entries.map((entry) {
-                      final isTouched = entry.key == touchedIndex;
-                      final radius = isTouched ? 45.0 : 35.0;
-                      final data = entry.value;
-                      return PieChartSectionData(
-                        color: colors[entry.key % colors.length],
-                        value: data.value.length.toDouble(),
-                        title: '${data.value.length}',
-                        radius: radius,
-                        titleStyle: TextStyle(
-                          fontSize: isTouched ? 16 : 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => StockPage(
+                            preFilterData: filteredStock,
+                            drillDownTitle: "Stock: $modelName",
+                          ),
                         ),
                       );
-                    }).toList(),
-                  ),
-                ),
+                    }
+                  });
+                },
               ),
-              Expanded(
-                flex: 4,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: topEntries.asMap().entries.map((entry) {
-                    final data = entry.value;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: colors[entry.key % colors.length],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              data.key,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
+              borderData: FlBorderData(show: false),
+              sectionsSpace: 4,
+              centerSpaceRadius: 45,
+              sections: topEntries.asMap().entries.map((entry) {
+                final isTouched = entry.key == touchedIndex;
+                final radius = isTouched ? 25.0 : 20.0;
+                final data = entry.value;
+                return PieChartSectionData(
+                  color: colors[entry.key % colors.length],
+                  value: data.value.length.toDouble(),
+                  title: '',
+                  radius: radius,
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 4,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: topEntries.asMap().entries.map((entry) {
+              final data = entry.value;
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: colors[entry.key % colors.length],
                       ),
-                    );
-                  }).toList(),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        data.key,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              );
+            }).toList(),
           ),
         ),
       ],

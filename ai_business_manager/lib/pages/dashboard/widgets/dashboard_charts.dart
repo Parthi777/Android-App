@@ -37,9 +37,9 @@ class MonthlyTrendChart extends StatelessWidget {
         Expanded(
           child: LineChart(
             LineChartData(
-              gridData: const FlGridData(
-                show: false,
-              ), // Clean look, no grid lines
+              gridData: FlGridData(
+                show: false, // Completely hide grid for a cleaner, premium look
+              ),
               titlesData: FlTitlesData(
                 show: true,
                 topTitles: const AxisTitles(
@@ -143,15 +143,15 @@ class MonthlyTrendChart extends StatelessWidget {
           .map((e) => FlSpot(e.key.toDouble(), e.value.toDouble()))
           .toList(),
       isCurved: true,
-      curveSmoothness: 0.35, // More smooth
+      curveSmoothness: 0.45, // More smooth
       color: color,
-      barWidth: 3.5,
+      barWidth: 4.0, // Thicker line Let's make it 4.0
       isStrokeCapRound: true,
       dotData: const FlDotData(show: false),
       belowBarData: BarAreaData(
         show: true,
         gradient: LinearGradient(
-          colors: [color.withOpacity(0.3), color.withOpacity(0.0)],
+          colors: [color.withOpacity(0.4), color.withOpacity(0.0)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -202,11 +202,13 @@ class ModelDistributionPieChart extends StatelessWidget {
     }
 
     final colors = [
-      Colors.indigo,
-      Colors.blue,
-      Colors.cyan,
-      Colors.lightBlue,
-      Colors.grey,
+      const Color(
+        0xFF7DD3FC,
+      ), // Sky Blue (slightly deeper pastel for chart visibility)
+      const Color(0xFF86EFAC), // Emerald Green (pastel)
+      const Color(0xFFFDE047), // Yellow (pastel)
+      const Color(0xFFFDBA74), // Orange (pastel)
+      Colors.grey.shade300, // Soft Grey for 'Other'
     ];
 
     return Row(
@@ -217,21 +219,16 @@ class ModelDistributionPieChart extends StatelessWidget {
             PieChartData(
               pieTouchData: PieTouchData(enabled: false),
               borderData: FlBorderData(show: false),
-              sectionsSpace: 2,
-              centerSpaceRadius: 40,
+              sectionsSpace: 4,
+              centerSpaceRadius: 45,
               sections: topEntries.asMap().entries.map((entry) {
                 final index = entry.key;
                 final data = entry.value;
                 return PieChartSectionData(
                   color: colors[index % colors.length],
                   value: data.value.toDouble(),
-                  title: '${data.value}',
-                  radius: 30,
-                  titleStyle: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                  title: '',
+                  radius: 35, // Thicker donut ring
                 );
               }).toList(),
             ),

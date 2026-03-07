@@ -44,6 +44,27 @@ class StockPage extends HookConsumerWidget {
                 initialDateRange: selectedDateRange.value,
                 firstDate: DateTime(2000),
                 lastDate: DateTime(2100),
+                builder: (context, child) {
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      colorScheme: Theme.of(context).colorScheme.copyWith(
+                        primary: const Color(
+                          0xFFFF8B8B,
+                        ), // Soft Coral for highlights
+                        onPrimary: Colors.white,
+                        onSurface: const Color(0xFF232323),
+                      ),
+                      textButtonTheme: TextButtonThemeData(
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(
+                            0xFFFF8B8B,
+                          ), // Soft coral buttons
+                        ),
+                      ),
+                    ),
+                    child: child!,
+                  );
+                },
               );
               if (range != null) {
                 selectedDateRange.value = range;

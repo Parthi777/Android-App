@@ -29,130 +29,110 @@ class ModelWiseSalesChart extends StatelessWidget {
       if (entry.value.length > maxY) maxY = entry.value.length.toDouble();
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Model Wise Sales',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
-          ),
+    return BarChart(
+      BarChartData(
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (value) =>
+              FlLine(color: Colors.grey.withOpacity(0.08), strokeWidth: 1),
         ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: BarChart(
-            BarChartData(
-              gridData: FlGridData(
-                show: true,
-                drawVerticalLine: false,
-                getDrawingHorizontalLine: (value) => FlLine(
-                  color: Colors.grey.withOpacity(0.2),
-                  strokeWidth: 1,
-                  dashArray: [5, 5],
-                ),
-              ),
-              titlesData: FlTitlesData(
-                topTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                rightTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 40,
-                    getTitlesWidget: (value, meta) => SideTitleWidget(
-                      meta: meta,
-                      child: Text(
-                        value.toInt().toString(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[700],
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+        titlesData: FlTitlesData(
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 40,
+              getTitlesWidget: (value, meta) => SideTitleWidget(
+                meta: meta,
+                child: Text(
+                  value.toInt().toString(),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 60,
-                    getTitlesWidget: (value, meta) {
-                      final index = value.toInt();
-                      if (index < 0 || index >= topEntries.length)
-                        return const SizedBox.shrink();
-                      return SideTitleWidget(
-                        meta: meta,
-                        space: 8,
-                        angle: -0.5,
-                        child: Text(
-                          topEntries[index].key,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[600],
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              borderData: FlBorderData(show: false),
-              maxY: maxY + (maxY * 0.2),
-              barGroups: topEntries.asMap().entries.map((e) {
-                final index = e.key;
-                final data = e.value;
-                return BarChartGroupData(
-                  x: index,
-                  barRods: [
-                    BarChartRodData(
-                      toY: data.value.length.toDouble(),
-                      gradient: LinearGradient(
-                        colors: [Colors.indigo, Colors.lightBlueAccent],
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                      ),
-                      width: 18,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ],
-                );
-              }).toList(),
-              barTouchData: BarTouchData(
-                touchCallback: (FlTouchEvent event, barTouchResponse) {
-                  if (barTouchResponse == null ||
-                      barTouchResponse.spot == null) {
-                    return;
-                  }
-                  if (event is FlTapUpEvent) {
-                    final index = barTouchResponse.spot!.touchedBarGroupIndex;
-                    final modelName = topEntries[index].key;
-                    final filteredData = topEntries[index].value;
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => SoldPage(
-                          preFilterData: filteredData,
-                          drillDownTitle: "Sales: $modelName",
-                        ),
-                      ),
-                    );
-                  }
-                },
               ),
             ),
           ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 60,
+              getTitlesWidget: (value, meta) {
+                final index = value.toInt();
+                if (index < 0 || index >= topEntries.length)
+                  return const SizedBox.shrink();
+                return SideTitleWidget(
+                  meta: meta,
+                  space: 8,
+                  angle: -0.5,
+                  child: Text(
+                    topEntries[index].key,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[600],
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                );
+              },
+            ),
+          ),
         ),
-      ],
+        borderData: FlBorderData(show: false),
+        maxY: maxY + (maxY * 0.2),
+        barGroups: topEntries.asMap().entries.map((e) {
+          final index = e.key;
+          final data = e.value;
+          return BarChartGroupData(
+            x: index,
+            barRods: [
+              BarChartRodData(
+                toY: data.value.length.toDouble(),
+                gradient: LinearGradient(
+                  colors: [Colors.indigo, Colors.lightBlueAccent],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                ),
+                width: 22,
+                borderRadius: BorderRadius.circular(100),
+              ),
+            ],
+          );
+        }).toList(),
+        barTouchData: BarTouchData(
+          touchCallback: (FlTouchEvent event, barTouchResponse) {
+            if (barTouchResponse == null || barTouchResponse.spot == null) {
+              return;
+            }
+            if (event is FlTapUpEvent) {
+              final index = barTouchResponse.spot!.touchedBarGroupIndex;
+              final modelName = topEntries[index].key;
+              final filteredData = topEntries[index].value;
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SoldPage(
+                    preFilterData: filteredData,
+                    drillDownTitle: "Sales: $modelName",
+                  ),
+                ),
+              );
+            }
+          },
+        ),
+      ),
     );
   }
 }
@@ -183,134 +163,114 @@ class SalesExecPerformanceChart extends StatelessWidget {
       if (entry.value.length > maxY) maxY = entry.value.length.toDouble();
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Executive Performance',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
-          ),
+    return BarChart(
+      BarChartData(
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (value) =>
+              FlLine(color: Colors.grey.withOpacity(0.08), strokeWidth: 1),
         ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: BarChart(
-            BarChartData(
-              gridData: FlGridData(
-                show: true,
-                drawVerticalLine: false,
-                getDrawingHorizontalLine: (value) => FlLine(
-                  color: Colors.grey.withOpacity(0.2),
-                  strokeWidth: 1,
-                  dashArray: [5, 5],
-                ),
-              ),
-              titlesData: FlTitlesData(
-                topTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                rightTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 40,
-                    getTitlesWidget: (value, meta) => SideTitleWidget(
-                      meta: meta,
-                      child: Text(
-                        value.toInt().toString(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[700],
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+        titlesData: FlTitlesData(
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 40,
+              getTitlesWidget: (value, meta) => SideTitleWidget(
+                meta: meta,
+                child: Text(
+                  value.toInt().toString(),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 60,
-                    getTitlesWidget: (value, meta) {
-                      final index = value.toInt();
-                      if (index < 0 || index >= topEntries.length)
-                        return const SizedBox.shrink();
-                      final names = topEntries[index].key.split(' ');
-                      final shortName = names.isNotEmpty
-                          ? names.first
-                          : topEntries[index].key;
-                      return SideTitleWidget(
-                        meta: meta,
-                        space: 8,
-                        angle: -0.5,
-                        child: Text(
-                          shortName,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[600],
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              borderData: FlBorderData(show: false),
-              maxY: maxY + (maxY * 0.2),
-              barGroups: topEntries.asMap().entries.map((e) {
-                final index = e.key;
-                final data = e.value;
-                return BarChartGroupData(
-                  x: index,
-                  barRods: [
-                    BarChartRodData(
-                      toY: data.value.length.toDouble(),
-                      gradient: LinearGradient(
-                        colors: [Colors.purple, Colors.pinkAccent],
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                      ),
-                      width: 18,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ],
-                );
-              }).toList(),
-              barTouchData: BarTouchData(
-                touchCallback: (FlTouchEvent event, barTouchResponse) {
-                  if (barTouchResponse == null ||
-                      barTouchResponse.spot == null) {
-                    return;
-                  }
-                  if (event is FlTapUpEvent) {
-                    final index = barTouchResponse.spot!.touchedBarGroupIndex;
-                    final execName = topEntries[index].key;
-                    final filteredData = topEntries[index].value;
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => SoldPage(
-                          preFilterData: filteredData,
-                          drillDownTitle: "Sales by $execName",
-                        ),
-                      ),
-                    );
-                  }
-                },
               ),
             ),
           ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 60,
+              getTitlesWidget: (value, meta) {
+                final index = value.toInt();
+                if (index < 0 || index >= topEntries.length)
+                  return const SizedBox.shrink();
+                final names = topEntries[index].key.split(' ');
+                final shortName = names.isNotEmpty
+                    ? names.first
+                    : topEntries[index].key;
+                return SideTitleWidget(
+                  meta: meta,
+                  space: 8,
+                  angle: -0.5,
+                  child: Text(
+                    shortName,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[600],
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                );
+              },
+            ),
+          ),
         ),
-      ],
+        borderData: FlBorderData(show: false),
+        maxY: maxY + (maxY * 0.2),
+        barGroups: topEntries.asMap().entries.map((e) {
+          final index = e.key;
+          final data = e.value;
+          return BarChartGroupData(
+            x: index,
+            barRods: [
+              BarChartRodData(
+                toY: data.value.length.toDouble(),
+                gradient: LinearGradient(
+                  colors: [Colors.purple, Colors.pinkAccent],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                ),
+                width: 22,
+                borderRadius: BorderRadius.circular(100),
+              ),
+            ],
+          );
+        }).toList(),
+        barTouchData: BarTouchData(
+          touchCallback: (FlTouchEvent event, barTouchResponse) {
+            if (barTouchResponse == null || barTouchResponse.spot == null) {
+              return;
+            }
+            if (event is FlTapUpEvent) {
+              final index = barTouchResponse.spot!.touchedBarGroupIndex;
+              final execName = topEntries[index].key;
+              final filteredData = topEntries[index].value;
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SoldPage(
+                    preFilterData: filteredData,
+                    drillDownTitle: "Sales by $execName",
+                  ),
+                ),
+              );
+            }
+          },
+        ),
+      ),
     );
   }
 }

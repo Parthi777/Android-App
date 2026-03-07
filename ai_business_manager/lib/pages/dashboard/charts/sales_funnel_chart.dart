@@ -28,83 +28,67 @@ class SalesFunnelChart extends StatelessWidget {
       soldItems.length,
     ].reduce((curr, next) => curr > next ? curr : next);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Sales Funnel',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final width = constraints.maxWidth;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
 
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildFunnelStage(
-                    context,
-                    label: "Enquiries",
-                    count: enquiries.length,
-                    max: maxVal,
-                    maxWidth: width,
-                    color: Colors.cyan,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => EnquiryPage(
-                          preFilterData: enquiries,
-                          drillDownTitle: "Funnel: Enquiries",
-                        ),
-                      ),
-                    ),
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildFunnelStage(
+              context,
+              label: "Enquiries",
+              count: enquiries.length,
+              max: maxVal,
+              maxWidth: width,
+              color: Colors.cyan,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EnquiryPage(
+                    preFilterData: enquiries,
+                    drillDownTitle: "Funnel: Enquiries",
                   ),
-                  _buildFunnelStage(
-                    context,
-                    label: "Bookings",
-                    count: bookings.length,
-                    max: maxVal,
-                    maxWidth: width,
-                    color: Colors.purpleAccent,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => BookingsPage(
-                          preFilterData: bookings,
-                          drillDownTitle: "Funnel: Bookings",
-                        ),
-                      ),
-                    ),
+                ),
+              ),
+            ),
+            _buildFunnelStage(
+              context,
+              label: "Bookings",
+              count: bookings.length,
+              max: maxVal,
+              maxWidth: width,
+              color: Colors.purpleAccent,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BookingsPage(
+                    preFilterData: bookings,
+                    drillDownTitle: "Funnel: Bookings",
                   ),
-                  _buildFunnelStage(
-                    context,
-                    label: "Sold",
-                    count: soldItems.length,
-                    max: maxVal,
-                    maxWidth: width,
-                    color: Colors.indigoAccent,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => SoldPage(
-                          preFilterData: soldItems,
-                          drillDownTitle: "Funnel: Sold",
-                        ),
-                      ),
-                    ),
+                ),
+              ),
+            ),
+            _buildFunnelStage(
+              context,
+              label: "Sold",
+              count: soldItems.length,
+              max: maxVal,
+              maxWidth: width,
+              color: Colors.indigoAccent,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SoldPage(
+                    preFilterData: soldItems,
+                    drillDownTitle: "Funnel: Sold",
                   ),
-                ],
-              );
-            },
-          ),
-        ),
-      ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -133,7 +117,7 @@ class SalesFunnelChart extends StatelessWidget {
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(100),
             boxShadow: [
               BoxShadow(
                 color: color.withOpacity(0.3),

@@ -105,7 +105,7 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
   // Pre-fill labels for the selected month days
   for (int i = 1; i <= daysInMonth; i++) {
     if (i % 5 == 0 || i == 1) {
-      monthLabels.add('\$i/\${selectedMonth.month}');
+      monthLabels.add('$i/${selectedMonth.month}');
     } else {
       monthLabels.add('');
     }

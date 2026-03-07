@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:month_picker_dialog/month_picker_dialog.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../providers/stats_provider.dart';
 import '../../providers/data_providers.dart';
@@ -22,10 +23,33 @@ class DashboardPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(dashboardStatsProvider);
 
-    final enquiries = ref.watch(enquiriesProvider).value ?? [];
-    final bookings = ref.watch(bookingsProvider).value ?? [];
-    final soldItems = ref.watch(soldProvider).value ?? [];
+    final selectedMonth = ref.watch(selectedDashboardMonthProvider);
+
+    bool isInSelectedMonth(DateTime date) {
+      return date.year == selectedMonth.year &&
+          date.month == selectedMonth.month;
+    }
+
+    final allEnquiries = ref.watch(enquiriesProvider).value ?? [];
+    final allBookings = ref.watch(bookingsProvider).value ?? [];
+    final allSoldItems = ref.watch(soldProvider).value ?? [];
     final stockItems = ref.watch(stockProvider).value ?? [];
+
+    final enquiries = allEnquiries
+        .where((e) => isInSelectedMonth(e.date))
+        .toList();
+    final bookings = allBookings
+        .where((b) => isInSelectedMonth(b.bookingDate))
+        .toList();
+    final soldItems = allSoldItems
+        .where((s) => isInSelectedMonth(s.saleDate))
+        .toList();
+
+    final now = DateTime.now();
+    final todayRange = DateTimeRange(
+      start: DateTime(now.year, now.month, now.day),
+      end: DateTime(now.year, now.month, now.day, 23, 59, 59),
+    );
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -44,16 +68,21 @@ class DashboardPage extends HookConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Title Header
               Text(
-                'Welcome Back',
+                'Hi, User 👋',
                 style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.grey[900],
+                  letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 8),
+              Text(
+                "Let's check your business performance today",
+                style: TextStyle(fontSize: 15, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 32),
 
               // Today's Highlights
               Text(
@@ -72,11 +101,17 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Today's Sales",
                       value: stats.todaySalesCount.toString(),
                       icon: Icons.point_of_sale,
-                      color: Colors.green,
+                      iconColor: Colors.blueAccent,
+                      backgroundColor: const Color(0xFFE0F2FE), // Soft Blue
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const SoldPage()),
+                          MaterialPageRoute(
+                            builder: (_) => SoldPage(
+                              initialDateRange: todayRange,
+                              drillDownTitle: "Today's Sales",
+                            ),
+                          ),
                         );
                       },
                     ),
@@ -87,12 +122,16 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Today's Bookings",
                       value: stats.todayBookingsCount.toString(),
                       icon: Icons.book_online,
-                      color: Colors.blueAccent,
+                      iconColor: Colors.purple.shade700,
+                      backgroundColor: const Color(0xFFE9D5FF), // Soft Purple
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const BookingsPage(),
+                            builder: (_) => BookingsPage(
+                              initialDateRange: todayRange,
+                              drillDownTitle: "Today's Bookings",
+                            ),
                           ),
                         );
                       },
@@ -108,12 +147,16 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Today's Enquiries",
                       value: stats.todayEnquiriesCount.toString(),
                       icon: Icons.person_search,
-                      color: Colors.orange,
+                      iconColor: Colors.green.shade700,
+                      backgroundColor: const Color(0xFFDCFCE7), // Mint Green
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const EnquiryPage(),
+                            builder: (_) => EnquiryPage(
+                              initialDateRange: todayRange,
+                              drillDownTitle: "Today's Enquiries",
+                            ),
                           ),
                         );
                       },
@@ -143,12 +186,35 @@ class DashboardPage extends HookConsumerWidget {
                       final currentMonth = ref.read(
                         selectedDashboardMonthProvider,
                       );
-                      final DateTime? picked = await showDatePicker(
+                      final DateTime? picked = await showMonthPicker(
                         context: context,
                         initialDate: currentMonth,
                         firstDate: DateTime(2020),
                         lastDate: DateTime.now().add(const Duration(days: 365)),
-                        helpText: 'Select a Date in the Target Month',
+                        monthPickerDialogSettings: MonthPickerDialogSettings(
+                          headerSettings: const PickerHeaderSettings(
+                            headerBackgroundColor: Colors.white,
+                            headerCurrentPageTextStyle: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            headerSelectedIntervalTextStyle: TextStyle(
+                              color: Color(0xFFFF8B8B), // Soft Coral
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            headerIconsColor: Colors.black,
+                          ),
+                          dialogSettings: const PickerDialogSettings(
+                            dialogRoundedCornersRadius: 24,
+                            dialogBackgroundColor: Colors.white,
+                          ),
+                          dateButtonsSettings: const PickerDateButtonsSettings(
+                            selectedMonthBackgroundColor: Color(0xFFFF8B8B),
+                            selectedMonthTextColor: Colors.white,
+                          ),
+                        ),
                       );
                       if (picked != null) {
                         ref
@@ -166,9 +232,7 @@ class DashboardPage extends HookConsumerWidget {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.blueAccent,
                       side: const BorderSide(color: Colors.blueAccent),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      shape: const StadiumBorder(),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 8,
@@ -177,7 +241,7 @@ class DashboardPage extends HookConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
               // KPI Cards Grid (Monthly)
               Row(
@@ -187,7 +251,8 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Total Sales",
                       value: stats.monthlySalesCount.toString(),
                       icon: Icons.point_of_sale,
-                      color: Colors.green,
+                      iconColor: Colors.blueAccent,
+                      backgroundColor: const Color(0xFFE0F2FE), // Soft Blue
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -196,7 +261,8 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Total Bookings",
                       value: stats.monthlyBookingsCount.toString(),
                       icon: Icons.book_online,
-                      color: Colors.blueAccent,
+                      iconColor: Colors.purple.shade700,
+                      backgroundColor: const Color(0xFFE9D5FF), // Soft Purple
                     ),
                   ),
                 ],
@@ -209,7 +275,8 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Active Enquiries",
                       value: stats.activeEnquiriesCount.toString(),
                       icon: Icons.person_search,
-                      color: Colors.orange,
+                      iconColor: Colors.green.shade700,
+                      backgroundColor: const Color(0xFFDCFCE7), // Mint Green
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -218,7 +285,8 @@ class DashboardPage extends HookConsumerWidget {
                       title: 'Current Stock',
                       value: stats.currentStockCount.toString(),
                       icon: Icons.inventory_2,
-                      color: Colors.indigo,
+                      iconColor: Colors.deepOrange,
+                      backgroundColor: const Color(0xFFFFEDD5), // Light Orange
                     ),
                   ),
                 ],
@@ -234,7 +302,7 @@ class DashboardPage extends HookConsumerWidget {
                   child: MonthlyTrendChart(stats: stats),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
 
               // Top Selling Models Donut
               _buildSectionCard(
@@ -355,16 +423,17 @@ class DashboardPage extends HookConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade100, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(20.0),
+      padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
