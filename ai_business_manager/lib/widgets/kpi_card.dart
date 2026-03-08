@@ -22,69 +22,70 @@ class KPICard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(24),
       child: Container(
         decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(30), // Very soft, large radius
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.grey.withValues(alpha: 0.1),
+            width: 1.5,
+          ),
           boxShadow: [
             BoxShadow(
-              color: iconColor.withOpacity(
-                0.15,
-              ), // Diffuse shadow tinted to icon color
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+              color: iconColor.withValues(alpha: 0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 24,
-        ), // More vertical padding
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space items
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
-                      letterSpacing: 0.2,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 8), // Prevent icon from overlapping
                 Container(
-                  padding: const EdgeInsets.all(
-                    8,
-                  ), // Reduced padding to save horizontal space
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(
-                      0.6,
-                    ), // Soft white background for icon
-                    shape: BoxShape.circle,
+                    color: backgroundColor, // Use the passed pastel color
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(icon, color: iconColor, size: 24),
+                  child: Icon(icon, color: iconColor, size: 26),
                 ),
+                if (onTap != null)
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: Colors.grey.shade400,
+                    size: 14,
+                  ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Text(
               value,
               style: const TextStyle(
-                fontSize: 28, // Slightly larger, bolder value text
+                fontSize: 32,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF1E1E1E),
-                letterSpacing: -0.5,
+                color: Color(0xFF0F172A),
+                letterSpacing: -1.0,
+                height: 1.1,
               ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF64748B),
+                letterSpacing: 0.2,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

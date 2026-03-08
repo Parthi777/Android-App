@@ -434,7 +434,7 @@ class RtoLocationChart extends StatelessWidget {
     return BarChart(
       BarChartData(
         gridData: FlGridData(
-          show: true,
+          show: false,
           drawVerticalLine: false,
           getDrawingHorizontalLine: (value) =>
               FlLine(color: Colors.grey.withOpacity(0.08), strokeWidth: 1),
