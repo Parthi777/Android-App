@@ -103,6 +103,7 @@ class AuthService {
           .signInWithCredential(credential);
 
       if (userCredential.user != null) {
+        await enableBiometricLogin(true);
         return AppUser.fromFirebaseUser(userCredential.user!);
       }
       return null;
