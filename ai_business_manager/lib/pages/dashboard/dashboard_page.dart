@@ -101,8 +101,7 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Today's Sales",
                       value: stats.todaySalesCount.toString(),
                       icon: Icons.point_of_sale,
-                      iconColor: Colors.blueAccent,
-                      backgroundColor: const Color(0xFFE0F2FE), // Soft Blue
+                      color: Colors.green,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -122,8 +121,7 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Today's Bookings",
                       value: stats.todayBookingsCount.toString(),
                       icon: Icons.book_online,
-                      iconColor: Colors.purple.shade700,
-                      backgroundColor: const Color(0xFFE9D5FF), // Soft Purple
+                      color: Colors.blueAccent,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -147,8 +145,7 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Today's Enquiries",
                       value: stats.todayEnquiriesCount.toString(),
                       icon: Icons.person_search,
-                      iconColor: Colors.green.shade700,
-                      backgroundColor: const Color(0xFFDCFCE7), // Mint Green
+                      color: Colors.orange,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -251,8 +248,7 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Total Sales",
                       value: stats.monthlySalesCount.toString(),
                       icon: Icons.point_of_sale,
-                      iconColor: Colors.blueAccent,
-                      backgroundColor: const Color(0xFFE0F2FE), // Soft Blue
+                      color: Colors.green,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -261,8 +257,7 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Total Bookings",
                       value: stats.monthlyBookingsCount.toString(),
                       icon: Icons.book_online,
-                      iconColor: Colors.purple.shade700,
-                      backgroundColor: const Color(0xFFE9D5FF), // Soft Purple
+                      color: Colors.blueAccent,
                     ),
                   ),
                 ],
@@ -275,8 +270,7 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Active Enquiries",
                       value: stats.activeEnquiriesCount.toString(),
                       icon: Icons.person_search,
-                      iconColor: Colors.green.shade700,
-                      backgroundColor: const Color(0xFFDCFCE7), // Mint Green
+                      color: Colors.orange,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -285,8 +279,7 @@ class DashboardPage extends HookConsumerWidget {
                       title: 'Current Stock',
                       value: stats.currentStockCount.toString(),
                       icon: Icons.inventory_2,
-                      iconColor: Colors.deepOrange,
-                      backgroundColor: const Color(0xFFFFEDD5), // Light Orange
+                      color: Colors.deepOrange,
                     ),
                   ),
                 ],
