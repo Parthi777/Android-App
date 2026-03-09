@@ -22,10 +22,11 @@ final enquiriesProvider = FutureProvider.autoDispose<List<Enquiry>>((
     branch.googleSheetId,
     branch.enquirySheetGid,
   );
-  if (sheetName == null)
+  if (sheetName == null) {
     throw Exception(
       "Could not find Enquiry Sheet Tab for GID: \${branch.enquirySheetGid}",
     );
+  }
 
   return sheetService.fetchModelRows(
     branch.googleSheetId,
@@ -49,10 +50,11 @@ final bookingsProvider = FutureProvider.autoDispose<List<Booking>>((ref) async {
     branch.googleSheetId,
     branch.bookingSheetGid,
   );
-  if (sheetName == null)
+  if (sheetName == null) {
     throw Exception(
       "Could not find Bookings Sheet Tab for GID: \${branch.bookingSheetGid}",
     );
+  }
 
   return sheetService.fetchModelRows(
     branch.googleSheetId,
@@ -76,10 +78,11 @@ final soldProvider = FutureProvider.autoDispose<List<Sold>>((ref) async {
     branch.googleSheetId,
     branch.soldSheetGid,
   );
-  if (sheetName == null)
+  if (sheetName == null) {
     throw Exception(
       "Could not find Sold Sheet Tab for GID: \${branch.soldSheetGid}",
     );
+  }
 
   return sheetService.fetchModelRows(
     branch.googleSheetId,
@@ -103,10 +106,11 @@ final stockProvider = FutureProvider.autoDispose<List<Stock>>((ref) async {
     branch.googleSheetId,
     branch.stockSheetGid,
   );
-  if (sheetName == null)
+  if (sheetName == null) {
     throw Exception(
       "Could not find Stock Sheet Tab for GID: \${branch.stockSheetGid}",
     );
+  }
 
   return sheetService.fetchModelRows(
     branch.googleSheetId,

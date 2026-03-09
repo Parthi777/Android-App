@@ -3,9 +3,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Provider for Local Cache
-final appCacheProvider = FutureProvider<AppCache>((ref) async {
-  final prefs = await SharedPreferences.getInstance();
-  return AppCache(prefs);
+final appCacheProvider = Provider<AppCache>((ref) {
+  throw UnimplementedError('appCacheProvider must be overridden in main.dart');
 });
 
 class AppCache {

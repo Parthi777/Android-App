@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../models/sheet_data_models.dart';
-import '../../sales/enquiry_page.dart';
-import '../../sales/bookings_page.dart';
-import '../../sales/sold_page.dart';
 
 class SalesFunnelChart extends StatelessWidget {
   final List<Enquiry> enquiries;
@@ -42,14 +40,12 @@ class SalesFunnelChart extends StatelessWidget {
               max: maxVal,
               maxWidth: width,
               color: Colors.cyan,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => EnquiryPage(
-                    preFilterData: enquiries,
-                    drillDownTitle: "Funnel: Enquiries",
-                  ),
-                ),
+              onTap: () => context.push(
+                '/sales/enquiry',
+                extra: {
+                  'preFilterData': enquiries,
+                  'drillDownTitle': "Funnel: Enquiries",
+                },
               ),
             ),
             _buildFunnelStage(
@@ -59,14 +55,12 @@ class SalesFunnelChart extends StatelessWidget {
               max: maxVal,
               maxWidth: width,
               color: Colors.purpleAccent,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => BookingsPage(
-                    preFilterData: bookings,
-                    drillDownTitle: "Funnel: Bookings",
-                  ),
-                ),
+              onTap: () => context.push(
+                '/sales/bookings',
+                extra: {
+                  'preFilterData': bookings,
+                  'drillDownTitle': "Funnel: Bookings",
+                },
               ),
             ),
             _buildFunnelStage(
@@ -76,14 +70,12 @@ class SalesFunnelChart extends StatelessWidget {
               max: maxVal,
               maxWidth: width,
               color: Colors.indigoAccent,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => SoldPage(
-                    preFilterData: soldItems,
-                    drillDownTitle: "Funnel: Sold",
-                  ),
-                ),
+              onTap: () => context.push(
+                '/sales/sold',
+                extra: {
+                  'preFilterData': soldItems,
+                  'drillDownTitle': "Funnel: Sold",
+                },
               ),
             ),
           ],

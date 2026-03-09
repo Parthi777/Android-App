@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb;
 import '../../services/auth_service.dart';
 import '../providers/branch_provider.dart';
 import 'ai_chat_modal.dart';
@@ -16,8 +17,11 @@ class AppLayout extends ConsumerWidget {
     final bool isWideScreen = MediaQuery.of(context).size.width >= 800;
     final activeBranch = ref.watch(branchProvider);
 
+    final location = GoRouterState.of(context).uri.path;
+    final bool isRoot = location == '/dashboard';
+
     return Scaffold(
-      appBar: isWideScreen
+      appBar: isWideScreen || !isRoot
           ? null
           : AppBar(
               toolbarHeight: 90,
@@ -40,18 +44,22 @@ class AppLayout extends ConsumerWidget {
                 children: [
                   Text(
                     'Dhaara',
-                    style: GoogleFonts.pacifico(
-                      fontSize: 28,
+                    style: GoogleFonts.cormorantGaramond(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.5,
                       color: Theme.of(context).primaryColor,
+                      fontStyle: FontStyle.italic,
                     ),
                   ),
                   if (activeBranch != null)
                     Text(
                       activeBranch.name,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
+                      style: GoogleFonts.cinzel(
+                        fontSize: 15,
+                        color: const Color(0xFF7B52AB),
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2.0,
                       ),
                     ),
                 ],
@@ -69,7 +77,28 @@ class AppLayout extends ConsumerWidget {
         onPressed: () {
           showAIChatModal(context);
         },
-        child: const Icon(Icons.smart_toy),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          width: 56,
+          height: 56,
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).primaryColor.withOpacity(0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            image: const DecorationImage(
+              image: AssetImage('assets/chatbot.png'),
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -83,6 +112,7 @@ class AppDrawer extends ConsumerWidget {
     final activeBranch = ref.watch(branchProvider);
     final branches = ref.watch(branchesListProvider);
     final branchNotifier = ref.read(branchProvider.notifier);
+    final fbUser = fb.FirebaseAuth.instance.currentUser;
 
     return Drawer(
       child: SafeArea(
@@ -104,18 +134,22 @@ class AppDrawer extends ConsumerWidget {
                     children: [
                       Text(
                         'Dhaara',
-                        style: GoogleFonts.pacifico(
-                          fontSize: 28,
+                        style: GoogleFonts.cormorantGaramond(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.5,
                           color: Theme.of(context).primaryColor,
+                          fontStyle: FontStyle.italic,
                         ),
                       ),
                       if (activeBranch != null)
                         Text(
                           activeBranch.name,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
+                          style: GoogleFonts.cinzel(
+                            fontSize: 15,
+                            color: const Color(0xFF7B52AB),
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 2.0,
                           ),
                         ),
                     ],
@@ -281,30 +315,67 @@ class AppDrawer extends ConsumerWidget {
               ),
             ),
             // Profile Footer
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+            Container(
+              margin: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Theme.of(context).primaryColor.withOpacity(0.15),
+                ),
+              ),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.grey[200],
-                    child: const Icon(Icons.person, color: Colors.grey),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'User Admin',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                  // Avatar: photo if available, else initials
+                  fbUser?.photoURL != null
+                      ? CircleAvatar(
+                          radius: 22,
+                          backgroundImage: NetworkImage(fbUser!.photoURL!),
+                        )
+                      : CircleAvatar(
+                          radius: 22,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.15),
+                          child: Text(
+                            (fbUser?.displayName ?? fbUser?.email ?? 'U')
+                                .substring(0, 1)
+                                .toUpperCase(),
+                            style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
                         ),
-                      ),
-                      Text(
-                        'admin@dhaara.com',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                      ),
-                    ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          fbUser?.displayName ?? 'User',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: Color(0xFF1A1340),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          fbUser?.email ?? '',
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

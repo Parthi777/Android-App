@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:intl/intl.dart';
@@ -25,6 +26,11 @@ class StockPage extends HookConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/dashboard'),
+          tooltip: 'Back to Dashboard',
+        ),
         title: Text(
           drillDownTitle ?? 'Stock Available - ${branch?.name ?? ''}',
         ),
@@ -230,14 +236,6 @@ class StockPage extends HookConsumerWidget {
             return true;
           }).toList();
 
-          final totalStock = filteredStock.length;
-          final availableStock = filteredStock
-              .where((s) => s.status.toLowerCase() == 'available')
-              .length;
-          final blockedStock = filteredStock
-              .where((s) => s.status.toLowerCase() == 'blocked')
-              .length;
-
           // Process model-wise count
           final Map<String, int> modelCounts = {};
           for (var stock in filteredStock) {
@@ -270,44 +268,6 @@ class StockPage extends HookConsumerWidget {
                         ),
                         onChanged: (value) => searchQuery.value = value,
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Stock Summary',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 16),
-                GridView.count(
-                  crossAxisCount: MediaQuery.of(context).size.width > 600
-                      ? 3
-                      : 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 1.5,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    _buildStatCard(
-                      context,
-                      'Total Inventory',
-                      totalStock.toString(),
-                      Icons.inventory_2,
-                    ),
-                    _buildStatCard(
-                      context,
-                      'Available',
-                      availableStock.toString(),
-                      Icons.check_circle_outline,
-                      color: Colors.green,
-                    ),
-                    _buildStatCard(
-                      context,
-                      'Blocked',
-                      blockedStock.toString(),
-                      Icons.lock_outline,
-                      color: Colors.orange,
                     ),
                   ],
                 ),
@@ -400,48 +360,6 @@ class StockPage extends HookConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Error: $err')),
-      ),
-    );
-  }
-
-  Widget _buildStatCard(
-    BuildContext context,
-    String title,
-    String value,
-    IconData icon, {
-    Color? color,
-  }) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 28,
-              color: color ?? Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Expanded(
-              child: Text(
-                title,
-                style: Theme.of(context).textTheme.labelMedium,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

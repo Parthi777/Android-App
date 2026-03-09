@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:intl/intl.dart';
@@ -29,12 +30,96 @@ class EnquiryPage extends HookConsumerWidget {
     final dateFormat = DateFormat('dd MMM yyyy');
     final searchQuery = useState('');
     final selectedDateRange = useState<DateTimeRange?>(initialDateRange);
+    final columnFilters = useState<Map<String, Set<String>>>({});
+
+    void toggleFilter(String column, String value) {
+      final current = Map<String, Set<String>>.from(columnFilters.value);
+      final columnSet = Set<String>.from(current[column] ?? {});
+      if (columnSet.contains(value)) {
+        columnSet.remove(value);
+      } else {
+        columnSet.add(value);
+      }
+      if (columnSet.isEmpty) {
+        current.remove(column);
+      } else {
+        current[column] = columnSet;
+      }
+      columnFilters.value = current;
+    }
+
+    Widget buildFilterHeader(
+      String label,
+      String columnKey,
+      List<String> allValues,
+    ) {
+      final activeFilters = columnFilters.value[columnKey] ?? {};
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label),
+          PopupMenuButton<String>(
+            icon: Icon(
+              Icons.filter_list,
+              size: 16,
+              color: activeFilters.isNotEmpty ? Colors.blue : null,
+            ),
+            onSelected: (value) {
+              if (value == 'CLEAR_ALL') {
+                final current = Map<String, Set<String>>.from(
+                  columnFilters.value,
+                );
+                current.remove(columnKey);
+                columnFilters.value = current;
+              } else {
+                toggleFilter(columnKey, value);
+              }
+            },
+            itemBuilder: (context) {
+              final uniqueValues = allValues.toSet().toList()..sort();
+              return [
+                PopupMenuItem(
+                  value: 'CLEAR_ALL',
+                  child: Text(
+                    'Clear Filters',
+                    style: TextStyle(
+                      color: activeFilters.isEmpty ? Colors.grey : Colors.blue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const PopupMenuDivider(),
+                ...uniqueValues.map((val) {
+                  final isSelected = activeFilters.contains(val);
+                  return CheckedPopupMenuItem(
+                    value: val,
+                    checked: isSelected,
+                    child: Text(val),
+                  );
+                }),
+              ];
+            },
+          ),
+        ],
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/dashboard'),
+          tooltip: 'Back to Dashboard',
+        ),
         title: Text(drillDownTitle ?? 'Enquiries - ${branch?.name ?? ''}'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_alt_off),
+            onPressed: () => columnFilters.value = {},
+            tooltip: 'Clear All Column Filters',
+          ),
           if (selectedDateRange.value != null)
+            // ... truncated for brevity in thought, but I will provide full replacement ...
             IconButton(
               icon: const Icon(Icons.calendar_today),
               color: Theme.of(context).colorScheme.primary,
@@ -97,15 +182,18 @@ class EnquiryPage extends HookConsumerWidget {
                   final d = DateTime(e.date.year, e.date.month, e.date.day);
                   final s = DateTime(start.year, start.month, start.day);
                   final en = DateTime(end.year, end.month, end.day);
-                  if (d.isBefore(s) || d.isAfter(en)) return false;
+                  if (d.isBefore(s) || d.isAfter(en)) {
+                    return false;
+                  }
                 }
                 if (searchQuery.value.isNotEmpty) {
                   final q = searchQuery.value.toLowerCase();
                   if (!e.customerName.toLowerCase().contains(q) &&
                       !e.phone.toLowerCase().contains(q) &&
                       !e.modelInterested.toLowerCase().contains(q) &&
-                      !e.executive.toLowerCase().contains(q))
+                      !e.executive.toLowerCase().contains(q)) {
                     return false;
+                  }
                 }
                 return true;
               }).toList();
@@ -158,6 +246,7 @@ class EnquiryPage extends HookConsumerWidget {
       body: enquiriesAsync.when(
         data: (enquiries) {
           final filteredEnquiries = enquiries.where((e) {
+            // Date Filter
             if (selectedDateRange.value != null) {
               final start = selectedDateRange.value!.start;
               final end = selectedDateRange.value!.end;
@@ -168,6 +257,8 @@ class EnquiryPage extends HookConsumerWidget {
                 return false;
               }
             }
+
+            // Global Search Filter
             if (searchQuery.value.isNotEmpty) {
               final q = searchQuery.value.toLowerCase();
               if (!e.customerName.toLowerCase().contains(q) &&
@@ -175,6 +266,30 @@ class EnquiryPage extends HookConsumerWidget {
                   !e.modelInterested.toLowerCase().contains(q) &&
                   !e.executive.toLowerCase().contains(q) &&
                   !e.id.toLowerCase().contains(q)) {
+                return false;
+              }
+            }
+
+            // Column Filters
+            for (final entry in columnFilters.value.entries) {
+              final column = entry.key;
+              final activeValues = entry.value;
+              String recordValue = '';
+              switch (column) {
+                case 'executive':
+                  recordValue = e.executive;
+                  break;
+                case 'modelInterested':
+                  recordValue = e.modelInterested;
+                  break;
+                case 'source':
+                  recordValue = e.source;
+                  break;
+                case 'status':
+                  recordValue = e.status;
+                  break;
+              }
+              if (!activeValues.contains(recordValue)) {
                 return false;
               }
             }
@@ -210,26 +325,52 @@ class EnquiryPage extends HookConsumerWidget {
                     scrollDirection: Axis.horizontal,
                     child: SingleChildScrollView(
                       child: DataTable(
-                        columns: const [
-                          DataColumn(label: Text('Enquiry ID')),
-                          DataColumn(label: Text('Date')),
-                          DataColumn(label: Text('Executive')),
-                          DataColumn(label: Text('Customer Name')),
-                          DataColumn(label: Text('Phone')),
-                          DataColumn(label: Text('Model Interested')),
-                          DataColumn(label: Text('Source')),
-                          DataColumn(label: Text('Status')),
+                        columns: [
+                          const DataColumn(label: Text('Enquiry ID')),
+                          const DataColumn(label: Text('Date')),
+                          DataColumn(
+                            label: buildFilterHeader(
+                              'Executive',
+                              'executive',
+                              enquiries.map((e) => e.executive).toList(),
+                            ),
+                          ),
+                          const DataColumn(label: Text('Customer Name')),
+                          const DataColumn(label: Text('Phone')),
+                          DataColumn(
+                            label: buildFilterHeader(
+                              'Model Interested',
+                              'modelInterested',
+                              enquiries.map((e) => e.modelInterested).toList(),
+                            ),
+                          ),
+                          DataColumn(
+                            label: buildFilterHeader(
+                              'Source',
+                              'source',
+                              enquiries.map((e) => e.source).toList(),
+                            ),
+                          ),
+                          DataColumn(
+                            label: buildFilterHeader(
+                              'Status',
+                              'status',
+                              enquiries.map((e) => e.status).toList(),
+                            ),
+                          ),
                         ],
                         rows: filteredEnquiries.map((enquiry) {
                           return DataRow(
                             cells: [
-                              DataCell(Text(enquiry.id)),
-                              DataCell(Text(dateFormat.format(enquiry.date))),
-                              DataCell(Text(enquiry.executive)),
-                              DataCell(Text(enquiry.customerName)),
-                              DataCell(Text(enquiry.phone)),
-                              DataCell(Text(enquiry.modelInterested)),
-                              DataCell(Text(enquiry.source)),
+                              DataCell(SelectableText(enquiry.id)),
+                              DataCell(
+                                SelectableText(dateFormat.format(enquiry.date)),
+                              ),
+                              DataCell(SelectableText(enquiry.executive)),
+                              DataCell(SelectableText(enquiry.customerName)),
+                              DataCell(SelectableText(enquiry.phone)),
+                              DataCell(SelectableText(enquiry.modelInterested)),
+                              DataCell(SelectableText(enquiry.source)),
                               DataCell(
                                 Container(
                                   padding: const EdgeInsets.symmetric(
@@ -245,7 +386,7 @@ class EnquiryPage extends HookConsumerWidget {
                                       color: _getStatusColor(enquiry.status),
                                     ),
                                   ),
-                                  child: Text(
+                                  child: SelectableText(
                                     enquiry.status,
                                     style: TextStyle(
                                       color: _getStatusColor(enquiry.status),

@@ -2,20 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import '../services/ai_service.dart';
-import '../providers/stats_provider.dart';
-import '../providers/data_providers.dart';
+import '../services/auth_service.dart';
+import '../providers/branch_provider.dart';
 
 class AIChatModal extends HookConsumerWidget {
   const AIChatModal({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // AI Service handle
     final aiService = ref.read(aiServiceProvider);
-
-    // We watch statsProvider to provide context to the AI
-    final dashboardStats = ref.watch(dashboardStatsProvider);
-    final soldAsync = ref.watch(soldProvider);
-    final stockAsync = ref.watch(stockProvider);
 
     final messages = useState<List<Map<String, String>>>([
       {
@@ -44,6 +40,8 @@ class AIChatModal extends HookConsumerWidget {
       final text = textController.text.trim();
       if (text.isEmpty) return;
 
+      debugPrint("AIChatModal: sendMessage triggered with text: $text");
+
       // Add user message to UI
       messages.value = [
         ...messages.value,
@@ -53,49 +51,44 @@ class AIChatModal extends HookConsumerWidget {
       isLoading.value = true;
       scrollToBottom();
 
-      // Gather context
-      final soldCount = soldAsync.value?.length ?? 0;
-      final stockItems = stockAsync.value ?? [];
-      final availableStock = stockItems
-          .where((s) => s.status.toLowerCase() == 'available')
-          .length;
-      final blockedStock = stockItems
-          .where((s) => s.status.toLowerCase() == 'blocked')
-          .length;
+      try {
+        debugPrint("AIChatModal: Aggregating context for active branch...");
+        final activeBranch = ref.read(branchProvider);
 
-      final enqRatio = dashboardStats.totalEnquiries > 0
-          ? (dashboardStats.totalBookings / dashboardStats.totalEnquiries) * 100
-          : 0.0;
+        // Fetch data only for the selected branch as requested
+        final contextData = await aiService.buildBusinessContext(
+          activeBranch: activeBranch,
+        );
+        debugPrint("AIChatModal: Context built. Length: ${contextData.length}");
 
-      final retRatio = dashboardStats.totalBookings > 0
-          ? (soldCount / dashboardStats.totalBookings) * 100
-          : 0.0;
+        // Step 2: Send to AI Service with branch-specific context and memory
+        final userId = ref.read(authServiceProvider).currentUser?.uid;
+        final responseText = await aiService.askQuestion(
+          text,
+          contextData: contextData,
+          activeBranch: activeBranch,
+          userId: userId,
+        );
+        debugPrint("AIChatModal: AI Response received.");
 
-      String contextData =
-          '''
-Active Branch KPIs:
-- Total Enquiries: ${dashboardStats.totalEnquiries}
-- Total Bookings: ${dashboardStats.totalBookings}
-- Total Sold: $soldCount
-- Available Stock: $availableStock
-- Blocked Stock: $blockedStock
-- Enquiry to Booking Ratio: ${enqRatio.toStringAsFixed(1)}%
-- Booking to Retail Ratio: ${retRatio.toStringAsFixed(1)}%
-''';
-
-      // Send to AI Service
-      final responseText = await aiService.askQuestion(
-        text,
-        contextData: contextData,
-      );
-
-      // Add AI response to UI
-      messages.value = [
-        ...messages.value,
-        {'role': 'ai', 'text': responseText},
-      ];
-      isLoading.value = false;
-      scrollToBottom();
+        // Add AI response to UI
+        messages.value = [
+          ...messages.value,
+          {'role': 'ai', 'text': responseText},
+        ];
+      } catch (e) {
+        messages.value = [
+          ...messages.value,
+          {
+            'role': 'ai',
+            'text':
+                "I'm sorry, I encountered an error while processing your request: $e",
+          },
+        ];
+      } finally {
+        isLoading.value = false;
+        scrollToBottom();
+      }
     }
 
     return Container(

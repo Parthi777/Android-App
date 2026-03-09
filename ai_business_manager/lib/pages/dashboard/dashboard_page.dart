@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import 'package:month_picker_dialog/month_picker_dialog.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../providers/stats_provider.dart';
 import '../../providers/data_providers.dart';
-import '../sales/sold_page.dart';
-import '../sales/bookings_page.dart';
-import '../sales/enquiry_page.dart';
-import 'widgets/dashboard_charts.dart';
+
 import '../../widgets/kpi_card.dart';
 import 'charts/enquiry_charts.dart';
 import 'charts/sales_charts.dart';
@@ -69,7 +67,7 @@ class DashboardPage extends HookConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Hi, User 👋',
+                'Hi 👋',
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
@@ -101,16 +99,17 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Today's Sales",
                       value: stats.todaySalesCount.toString(),
                       icon: Icons.point_of_sale,
-                      color: Colors.green,
+                      gradientColors: const [
+                        Color(0xFF5A5599),
+                        Color(0xFF332F66),
+                      ],
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => SoldPage(
-                              initialDateRange: todayRange,
-                              drillDownTitle: "Today's Sales",
-                            ),
-                          ),
+                        context.push(
+                          '/sales/sold',
+                          extra: {
+                            'initialDateRange': todayRange,
+                            'drillDownTitle': "Today's Sales",
+                          },
                         );
                       },
                     ),
@@ -121,16 +120,17 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Today's Bookings",
                       value: stats.todayBookingsCount.toString(),
                       icon: Icons.book_online,
-                      color: Colors.blueAccent,
+                      gradientColors: const [
+                        Color(0xFF289098),
+                        Color(0xFF0B5E65),
+                      ],
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BookingsPage(
-                              initialDateRange: todayRange,
-                              drillDownTitle: "Today's Bookings",
-                            ),
-                          ),
+                        context.push(
+                          '/sales/bookings',
+                          extra: {
+                            'initialDateRange': todayRange,
+                            'drillDownTitle': "Today's Bookings",
+                          },
                         );
                       },
                     ),
@@ -145,16 +145,17 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Today's Enquiries",
                       value: stats.todayEnquiriesCount.toString(),
                       icon: Icons.person_search,
-                      color: Colors.orange,
+                      gradientColors: const [
+                        Color(0xFF70C276),
+                        Color(0xFF3B8E42),
+                      ],
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => EnquiryPage(
-                              initialDateRange: todayRange,
-                              drillDownTitle: "Today's Enquiries",
-                            ),
-                          ),
+                        context.push(
+                          '/sales/enquiry',
+                          extra: {
+                            'initialDateRange': todayRange,
+                            'drillDownTitle': "Today's Enquiries",
+                          },
                         );
                       },
                     ),
@@ -167,11 +168,76 @@ class DashboardPage extends HookConsumerWidget {
               ),
               const SizedBox(height: 32),
 
+              // Overall Summary
+              Text(
+                "Overall Summary",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: KPICard(
+                      title: "Overall Active Enquiries",
+                      value: stats.activeEnquiriesCount.toString(),
+                      icon: Icons.person_search,
+                      maxLines: 2,
+                      gradientColors: const [
+                        Color(0xFF70C276),
+                        Color(0xFF3B8E42),
+                      ],
+                      onTap: () {
+                        context.push(
+                          '/sales/enquiry',
+                          extra: {
+                            'preFilterData': allEnquiries
+                                .where(
+                                  (e) =>
+                                      e.status.toLowerCase() != 'closed' &&
+                                      e.status.toLowerCase() != 'lost',
+                                )
+                                .toList(),
+                            'drillDownTitle': "Overall Active Enquiries",
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: KPICard(
+                      title: "Overall Active Bookings",
+                      value: stats.totalBookings.toString(),
+                      icon: Icons.book_online,
+                      maxLines: 2,
+                      gradientColors: const [
+                        Color(0xFF289098),
+                        Color(0xFF0B5E65),
+                      ],
+                      onTap: () {
+                        context.push(
+                          '/sales/bookings',
+                          extra: {
+                            'preFilterData': allBookings,
+                            'drillDownTitle': "Overall Active Bookings",
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Monthly Overview',
+                    'Monthly Performance',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -238,7 +304,7 @@ class DashboardPage extends HookConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
               // KPI Cards Grid (Monthly)
               Row(
@@ -248,7 +314,18 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Total Sales",
                       value: stats.monthlySalesCount.toString(),
                       icon: Icons.point_of_sale,
-                      color: Colors.green,
+                      gradientColors: const [
+                        Color(0xFF5A5599),
+                        Color(0xFF332F66),
+                      ],
+                      onTap: () => context.push(
+                        '/sales/sold',
+                        extra: {
+                          'preFilterData': soldItems,
+                          'drillDownTitle':
+                              'Sales — ${DateFormat('MMM yyyy').format(selectedMonth)}',
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -257,7 +334,18 @@ class DashboardPage extends HookConsumerWidget {
                       title: "Total Bookings",
                       value: stats.monthlyBookingsCount.toString(),
                       icon: Icons.book_online,
-                      color: Colors.blueAccent,
+                      gradientColors: const [
+                        Color(0xFF289098),
+                        Color(0xFF0B5E65),
+                      ],
+                      onTap: () => context.push(
+                        '/sales/bookings',
+                        extra: {
+                          'preFilterData': bookings,
+                          'drillDownTitle':
+                              'Bookings — ${DateFormat('MMM yyyy').format(selectedMonth)}',
+                        },
+                      ),
                     ),
                   ),
                 ],
@@ -268,9 +356,20 @@ class DashboardPage extends HookConsumerWidget {
                   Expanded(
                     child: KPICard(
                       title: "Active Enquiries",
-                      value: stats.activeEnquiriesCount.toString(),
+                      value: stats.monthlyActiveEnquiriesCount.toString(),
                       icon: Icons.person_search,
-                      color: Colors.orange,
+                      gradientColors: const [
+                        Color(0xFF70C276),
+                        Color(0xFF3B8E42),
+                      ],
+                      onTap: () => context.push(
+                        '/sales/enquiry',
+                        extra: {
+                          'preFilterData': enquiries,
+                          'drillDownTitle':
+                              'Enquiries — ${DateFormat('MMM yyyy').format(selectedMonth)}',
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -279,32 +378,17 @@ class DashboardPage extends HookConsumerWidget {
                       title: 'Current Stock',
                       value: stats.currentStockCount.toString(),
                       icon: Icons.inventory_2,
-                      color: Colors.deepOrange,
+                      gradientColors: const [
+                        Color(0xFFE87948),
+                        Color(0xFFC44D20),
+                      ],
+                      onTap: () => context.push(
+                        '/stock',
+                        extra: {'drillDownTitle': 'Current Stock'},
+                      ),
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 32),
-
-              // Sales Trend Chart
-              _buildSectionCard(
-                title: 'Monthly Trends (Last 30 Days)',
-                icon: Icons.trending_up,
-                child: SizedBox(
-                  height: 250,
-                  child: MonthlyTrendChart(stats: stats),
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Top Selling Models Donut
-              _buildSectionCard(
-                title: 'Top Selling Models',
-                icon: Icons.pie_chart,
-                child: SizedBox(
-                  height: 220,
-                  child: ModelDistributionPieChart(stats: stats),
-                ),
               ),
               const SizedBox(height: 32),
 
@@ -333,72 +417,73 @@ class DashboardPage extends HookConsumerWidget {
               const SizedBox(height: 32),
 
               _buildSectionCard(
+                title: 'Bookings Trend',
+                icon: Icons.book_online,
+                child: BookingsTrendChart(bookings: bookings),
+              ),
+              const SizedBox(height: 32),
+
+              _buildSectionCard(
+                title: 'Sales Trend',
+                icon: Icons.trending_up,
+                child: SalesTrendChart(soldItems: soldItems),
+              ),
+              const SizedBox(height: 32),
+
+              _buildSectionCard(
                 title: 'Model Wise Sales',
                 icon: Icons.bar_chart,
-                child: SizedBox(
-                  height: 250,
-                  child: ModelWiseSalesChart(soldItems: soldItems),
-                ),
+                child: ModelWiseSalesChart(soldItems: soldItems),
               ),
               const SizedBox(height: 32),
 
               _buildSectionCard(
                 title: 'Executive Performance',
                 icon: Icons.people,
-                child: SizedBox(
-                  height: 250,
-                  child: SalesExecPerformanceChart(soldItems: soldItems),
-                ),
+                child: SalesExecPerformanceChart(soldItems: soldItems),
               ),
+
               const SizedBox(height: 32),
 
               _buildSectionCard(
                 title: 'Stock Distribution',
                 icon: Icons.inventory_2_outlined,
-                child: SizedBox(
-                  height: 250,
-                  child: StockDistributionChart(stockItems: stockItems),
-                ),
+                child: StockDistributionChart(stockItems: stockItems),
               ),
               const SizedBox(height: 32),
 
               _buildSectionCard(
                 title: 'Finance vs Cash Distribution',
                 icon: Icons.account_balance_wallet,
-                child: SizedBox(
-                  height: 250,
-                  child: FinanceDistributionChart(soldItems: soldItems),
-                ),
+                child: FinanceDistributionChart(soldItems: soldItems),
+              ),
+              const SizedBox(height: 32),
+
+              _buildSectionCard(
+                title: 'Finance Performance',
+                icon: Icons.person_pin,
+                child: FinancePerformanceChart(soldItems: soldItems),
               ),
               const SizedBox(height: 32),
 
               _buildSectionCard(
                 title: 'Invoice Status',
                 icon: Icons.receipt_long,
-                child: SizedBox(
-                  height: 250,
-                  child: InvoiceStatusChart(soldItems: soldItems),
-                ),
+                child: InvoiceStatusChart(soldItems: soldItems),
               ),
               const SizedBox(height: 32),
 
               _buildSectionCard(
                 title: 'RTO Status',
                 icon: Icons.assignment_turned_in,
-                child: SizedBox(
-                  height: 250,
-                  child: RtoStatusChart(soldItems: soldItems),
-                ),
+                child: RtoStatusChart(soldItems: soldItems),
               ),
               const SizedBox(height: 32),
 
               _buildSectionCard(
                 title: 'RTO Location Distribution',
                 icon: Icons.pin_drop,
-                child: SizedBox(
-                  height: 250,
-                  child: RtoLocationChart(soldItems: soldItems),
-                ),
+                child: RtoLocationChart(soldItems: soldItems),
               ),
               const SizedBox(height: 16),
             ],

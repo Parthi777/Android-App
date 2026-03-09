@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 import 'package:googleapis/sheets/v4.dart' as sheets;
 import 'package:googleapis_auth/auth_io.dart';
 
@@ -22,21 +21,16 @@ Future<void> main() async {
     print('No data found.');
     return;
   }
-  print('Total rows returned by API: ' + values.length.toString());
+  print('Total rows returned by API: ${values.length}');
 
   if (values.length > 23) {
     for (int i = 20; i < values.length; i++) {
       if (values[i].isNotEmpty) {
         print(
-          'Row ' +
-              (i + 1).toString() +
-              ': ' +
-              values[i][0].toString() +
-              ' length: ' +
-              values[i].length.toString(),
+          'Row ${i + 1}: ${values[i][0]} length: ${values[i].length}',
         );
       } else {
-        print('Row ' + (i + 1).toString() + ': EMPTY');
+        print('Row ${i + 1}: EMPTY');
       }
     }
   }

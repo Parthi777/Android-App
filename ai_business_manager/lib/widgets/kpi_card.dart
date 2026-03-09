@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class KPICard extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
-  final Color color;
+  final List<Color> gradientColors;
   final VoidCallback? onTap;
+  final int maxLines;
 
   const KPICard({
     super.key,
     required this.title,
     required this.value,
     required this.icon,
-    required this.color,
+    required this.gradientColors,
     this.onTap,
+    this.maxLines = 1,
   });
 
   @override
@@ -23,17 +26,15 @@ class KPICard extends StatelessWidget {
       borderRadius: BorderRadius.circular(20),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
           borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            colors: gradientColors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-              spreadRadius: 1,
-            ),
-            BoxShadow(
-              color: color.withOpacity(0.05),
+              color: gradientColors.last.withOpacity(0.45),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -45,44 +46,37 @@ class KPICard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, color: color.withOpacity(0.8), size: 18),
+                Icon(icon, color: Colors.white, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[500],
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
                       letterSpacing: 0.3,
+                      height: 1.2,
                     ),
-                    maxLines: 1,
+                    maxLines: maxLines,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
             Text(
               value,
-              style: const TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF1E1E1E), // Darker, crisper text
+              style: GoogleFonts.dmMono(
+                fontSize: 34,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
                 letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 8),
-            // Adding a subtle decorative line at the bottom
-            Container(
-              height: 4,
-              width: 32,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
           ],
         ),
       ),

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:workmanager/workmanager.dart';
+import 'package:ai_business_manager/services/background_notification_service.dart';
 
 // Firebase
 import 'package:firebase_core/firebase_core.dart';
@@ -11,6 +14,8 @@ import 'package:ai_business_manager/theme/app_theme.dart';
 import 'package:ai_business_manager/providers/theme_provider.dart';
 import 'package:ai_business_manager/services/auth_service.dart';
 import 'package:ai_business_manager/services/google_sheet_service.dart';
+import 'package:ai_business_manager/core/app_cache.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // UI Layout & Pages
 import 'package:ai_business_manager/widgets/app_layout.dart';
@@ -25,6 +30,12 @@ import 'package:ai_business_manager/pages/settings/settings_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize Supabase
+  await Supabase.initialize(
+    url: 'https://mvjjtkfbndddkbxnufdh.supabase.co',
+    anonKey: 'sb_publishable_Ki1DWv4mvUdJb-gd3WlABA_NeiTnxz7',
+  );
+
   // Initialize Firebase (Requires flutterfire configure)
   try {
     await Firebase.initializeApp(
@@ -37,6 +48,10 @@ void main() async {
   // Create a container so we can read providers
   final container = ProviderContainer();
 
+  // Initialize SharedPreferences
+  final prefs = await SharedPreferences.getInstance();
+  final appCache = AppCache(prefs);
+
   // Initialize Google Sheets API
   try {
     final sheetService = container.read(googleSheetServiceProvider);
@@ -45,11 +60,24 @@ void main() async {
     debugPrint("Google Sheets init failed: $e");
   }
 
+  // Initialize Workmanager
+  Workmanager().initialize(callbackDispatcher);
+  Workmanager().registerPeriodicTask(
+    "dataFreshnessCheck",
+    "dataFreshnessTask",
+    frequency: const Duration(hours: 2),
+    initialDelay: const Duration(minutes: 15),
+    constraints: Constraints(networkType: NetworkType.connected),
+  );
+
   runApp(
     // Wrap the app with ProviderScope
     UncontrolledProviderScope(
       container: container,
-      child: const AIBusinessManagerApp(),
+      child: ProviderScope(
+        overrides: [appCacheProvider.overrideWithValue(appCache)],
+        child: const AIBusinessManagerApp(),
+      ),
     ),
   );
 }
@@ -85,19 +113,46 @@ class AIBusinessManagerApp extends ConsumerWidget {
             ),
             GoRoute(
               path: '/sales/enquiry',
-              builder: (context, state) => const EnquiryPage(),
+              builder: (context, state) {
+                final extra = state.extra as Map<String, dynamic>?;
+                return EnquiryPage(
+                  preFilterData: extra?['preFilterData'],
+                  drillDownTitle: extra?['drillDownTitle'],
+                  initialDateRange: extra?['initialDateRange'],
+                );
+              },
             ),
             GoRoute(
               path: '/sales/bookings',
-              builder: (context, state) => const BookingsPage(),
+              builder: (context, state) {
+                final extra = state.extra as Map<String, dynamic>?;
+                return BookingsPage(
+                  preFilterData: extra?['preFilterData'],
+                  drillDownTitle: extra?['drillDownTitle'],
+                  initialDateRange: extra?['initialDateRange'],
+                );
+              },
             ),
             GoRoute(
               path: '/sales/sold',
-              builder: (context, state) => const SoldPage(),
+              builder: (context, state) {
+                final extra = state.extra as Map<String, dynamic>?;
+                return SoldPage(
+                  preFilterData: extra?['preFilterData'],
+                  drillDownTitle: extra?['drillDownTitle'],
+                  initialDateRange: extra?['initialDateRange'],
+                );
+              },
             ),
             GoRoute(
               path: '/stock',
-              builder: (context, state) => const StockPage(),
+              builder: (context, state) {
+                final extra = state.extra as Map<String, dynamic>?;
+                return StockPage(
+                  preFilterData: extra?['preFilterData'],
+                  drillDownTitle: extra?['drillDownTitle'],
+                );
+              },
             ),
             GoRoute(
               path: '/settings',

@@ -18,7 +18,6 @@ class _AuthPageState extends ConsumerState<AuthPage>
   late AnimationController _orb1Controller;
   late AnimationController _orb2Controller;
   late Animation<double> _pulseAnim;
-  bool _biometricEnabled = false;
 
   @override
   void initState() {
@@ -38,15 +37,6 @@ class _AuthPageState extends ConsumerState<AuthPage>
     _pulseAnim = Tween<double>(begin: 0.95, end: 1.05).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
-    _checkBiometrics();
-  }
-
-  Future<void> _checkBiometrics() async {
-    final authService = ref.read(authServiceProvider);
-    final enabled = await authService.isBiometricLoginEnabled();
-    if (mounted) {
-      setState(() => _biometricEnabled = enabled);
-    }
   }
 
   @override
@@ -83,31 +73,6 @@ class _AuthPageState extends ConsumerState<AuthPage>
     }
   }
 
-  Future<void> _handleBiometricAuth() async {
-    final authService = ref.read(authServiceProvider);
-    final authenticated = await authService.authenticateWithBiometrics();
-
-    if (authenticated && mounted) {
-      // Check if we have a current user (Firebase session)
-      if (authService.currentUser != null) {
-        context.go('/dashboard');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-              'Session expired. Please sign in with Google once.',
-            ),
-            backgroundColor: const Color(0xFFE53935),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -135,7 +100,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
           // ── Animated floating orb 1 (top-right) ─────────────────
           AnimatedBuilder(
             animation: _orb1Controller,
-            builder: (_, __) {
+            builder: (_, _) {
               final t = _orb1Controller.value;
               final x = size.width * 0.6 + 40 * math.sin(t * 2 * math.pi);
               final y = size.height * 0.08 + 30 * math.cos(t * 2 * math.pi);
@@ -162,7 +127,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
           // ── Animated floating orb 2 (bottom-left) ───────────────
           AnimatedBuilder(
             animation: _orb2Controller,
-            builder: (_, __) {
+            builder: (_, _) {
               final t = _orb2Controller.value;
               final x = -60 + 35 * math.sin(t * 2 * math.pi + math.pi / 3);
               final y =
@@ -348,114 +313,56 @@ class _AuthPageState extends ConsumerState<AuthPage>
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 // ── Google Login Icon Button ────────
-                                _loading
-                                    ? Container(
-                                        width: 64,
-                                        height: 64,
-                                        decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Color(0xFF7B52AB),
-                                              Color(0xFF1E88E5),
-                                            ],
-                                          ),
-                                        ),
-                                        child: const Center(
-                                          child: SizedBox(
-                                            width: 24,
-                                            height: 24,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    : GestureDetector(
-                                        onTap: _handleGoogleSignIn,
-                                        child: Container(
+                                // Center the Google Login button
+                                Center(
+                                  child: _loading
+                                      ? Container(
                                           width: 64,
                                           height: 64,
-                                          decoration: BoxDecoration(
+                                          decoration: const BoxDecoration(
                                             shape: BoxShape.circle,
-                                            color: Colors.white,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withOpacity(
-                                                  0.08,
-                                                ),
-                                                blurRadius: 12,
-                                                offset: const Offset(0, 4),
-                                              ),
-                                            ],
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                Color(0xFF7B52AB),
+                                                Color(0xFF1E88E5),
+                                              ],
+                                            ),
                                           ),
-                                          padding: const EdgeInsets.all(16),
-                                          child: Image.network(
-                                            'https://www.gstatic.com/images/branding/product/2x/googleg_48dp.png',
-                                            fit: BoxFit.contain,
-                                          ),
-                                        ),
-                                      ),
-                                const SizedBox(width: 24),
-                                // ── Biometric Icon Button ───────────
-                                GestureDetector(
-                                  onTap: _biometricEnabled
-                                      ? _handleBiometricAuth
-                                      : () {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: const Text(
-                                                'Enable biometrics by logging in with Google once.',
-                                              ),
-                                              backgroundColor: const Color(
-                                                0xFF7B52AB,
-                                              ),
-                                              behavior:
-                                                  SnackBarBehavior.floating,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
+                                          child: const Center(
+                                            child: SizedBox(
+                                              width: 24,
+                                              height: 24,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Colors.white,
                                               ),
                                             ),
-                                          );
-                                        },
-                                  child: Container(
-                                    width: 64,
-                                    height: 64,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: LinearGradient(
-                                        colors: _biometricEnabled
-                                            ? [
-                                                const Color(0xFF7B52AB),
-                                                const Color(0xFF1E88E5),
-                                              ]
-                                            : [
-                                                Colors.grey[300]!,
-                                                Colors.grey[400]!,
+                                          ),
+                                        )
+                                      : GestureDetector(
+                                          onTap: _handleGoogleSignIn,
+                                          child: Container(
+                                            width: 64,
+                                            height: 64,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Colors.white,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withOpacity(0.08),
+                                                  blurRadius: 12,
+                                                  offset: const Offset(0, 4),
+                                                ),
                                               ],
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color:
-                                              (_biometricEnabled
-                                                      ? const Color(0xFF7B52AB)
-                                                      : Colors.black)
-                                                  .withOpacity(0.15),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
+                                            ),
+                                            padding: const EdgeInsets.all(16),
+                                            child: Image.network(
+                                              'https://www.gstatic.com/images/branding/product/2x/googleg_48dp.png',
+                                              fit: BoxFit.contain,
+                                            ),
+                                          ),
                                         ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.fingerprint,
-                                      color: Colors.white,
-                                      size: 32,
-                                    ),
-                                  ),
                                 ),
                               ],
                             ),

@@ -20,35 +20,26 @@ final selectedDashboardMonthProvider =
     );
 
 class DashboardStats {
-  // Original properties needed by ai_chat_modal.dart
   final int totalEnquiries;
   final int totalBookings;
   final double totalBookingAmount;
-
-  // Today's properties
   final int todaySalesCount;
   final double todayRevenue;
   final int todayBookingsCount;
   final int todayEnquiriesCount;
-
-  // Monthly properties (Based on selected month)
   final int monthlySalesCount;
   final double monthlyRevenue;
   final int monthlyBookingsCount;
+  final int monthlyActiveEnquiriesCount;
   final int activeEnquiriesCount;
   final int currentStockCount;
-
-  // Trend lines (Based on days in selected month)
   final List<int> monthlySalesTrend;
   final List<int> monthlyBookingsTrend;
   final List<int> monthlyEnquiriesTrend;
-  final List<String>
-  last30DaysLabels; // Keeping name for compatibility, but holds month labels
-
-  // Breakdown
+  final List<String> last30DaysLabels;
   final Map<String, int> topSellingModels;
 
-  const DashboardStats({
+  DashboardStats({
     this.totalEnquiries = 0,
     this.totalBookings = 0,
     this.totalBookingAmount = 0.0,
@@ -59,6 +50,7 @@ class DashboardStats {
     this.monthlySalesCount = 0,
     this.monthlyRevenue = 0.0,
     this.monthlyBookingsCount = 0,
+    this.monthlyActiveEnquiriesCount = 0,
     this.activeEnquiriesCount = 0,
     this.currentStockCount = 0,
     this.monthlySalesTrend = const [],
@@ -66,15 +58,22 @@ class DashboardStats {
     this.monthlyEnquiriesTrend = const [],
     this.last30DaysLabels = const [],
     this.topSellingModels = const {},
-  });
+  }) {
+    // Constructor Body
+  }
 }
 
 final dashboardStatsProvider = Provider<DashboardStats>((ref) {
-  final enquiries = ref.watch(enquiriesProvider).value ?? [];
-  final bookings = ref.watch(bookingsProvider).value ?? [];
-  final soldList = ref.watch(soldProvider).value ?? [];
-  final stockList = ref.watch(stockProvider).value ?? [];
+  final enquiriesAsync = ref.watch(enquiriesProvider);
+  final bookingsAsync = ref.watch(bookingsProvider);
+  final soldAsync = ref.watch(soldProvider);
+  final stockAsync = ref.watch(stockProvider);
   final selectedMonth = ref.watch(selectedDashboardMonthProvider);
+
+  final enquiries = enquiriesAsync.value ?? [];
+  final bookings = bookingsAsync.value ?? [];
+  final soldList = soldAsync.value ?? [];
+  final stockList = stockAsync.value ?? [];
 
   final today = DateTime.now();
 
@@ -86,6 +85,7 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
   int mSalesCount = 0;
   double mRevenue = 0.0;
   int mBookingsCount = 0;
+  int mActiveEnquiriesCount = 0;
   int aEnquiriesCount = 0;
   int tStock = 0;
 
@@ -135,6 +135,10 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
     }
 
     if (isInSelectedMonth(enquiry.date)) {
+      if (enquiry.status.toLowerCase() != 'closed' &&
+          enquiry.status.toLowerCase() != 'lost') {
+        mActiveEnquiriesCount++;
+      }
       final idx = enquiry.date.day - 1;
       if (idx >= 0 && idx < daysInMonth) {
         mEnquiriesTrend[idx]++;
@@ -203,6 +207,7 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
     monthlySalesCount: mSalesCount,
     monthlyRevenue: mRevenue,
     monthlyBookingsCount: mBookingsCount,
+    monthlyActiveEnquiriesCount: mActiveEnquiriesCount,
     activeEnquiriesCount: aEnquiriesCount,
     currentStockCount: tStock,
     monthlySalesTrend: mSalesTrend,

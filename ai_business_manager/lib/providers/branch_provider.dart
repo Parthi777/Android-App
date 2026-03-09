@@ -6,26 +6,24 @@ import '../core/app_cache.dart';
 class BranchNotifier extends Notifier<Branch?> {
   @override
   Branch? build() {
-    final cache = ref.read(appCacheProvider).value;
-    if (cache != null) {
-      final cachedBranchData = cache.readJson('active_branch');
-      if (cachedBranchData != null) {
-        return Branch.fromJson(cachedBranchData);
-      }
+    final cache = ref.watch(appCacheProvider);
+    final cachedBranchData = cache.readJson('active_branch');
+    if (cachedBranchData != null) {
+      return Branch.fromJson(cachedBranchData);
     }
     return null;
   }
 
   Future<void> setActiveBranch(Branch branch) async {
     state = branch;
-    final cache = ref.read(appCacheProvider).value;
-    await cache?.writeJson('active_branch', branch.toJson());
+    final cache = ref.read(appCacheProvider);
+    await cache.writeJson('active_branch', branch.toJson());
   }
 
   void clearActiveBranch() {
     state = null;
-    final cache = ref.read(appCacheProvider).value;
-    cache?.remove('active_branch');
+    final cache = ref.read(appCacheProvider);
+    cache.remove('active_branch');
   }
 }
 
@@ -38,12 +36,10 @@ final branchProvider = NotifierProvider<BranchNotifier, Branch?>(() {
 class BranchesListNotifier extends Notifier<List<Branch>> {
   @override
   List<Branch> build() {
-    final cache = ref.read(appCacheProvider).value;
-    if (cache != null) {
-      final cachedList = cache.readJsonList('saved_branches');
-      if (cachedList != null) {
-        return cachedList.map((json) => Branch.fromJson(json)).toList();
-      }
+    final cache = ref.watch(appCacheProvider);
+    final cachedList = cache.readJsonList('saved_branches');
+    if (cachedList != null) {
+      return cachedList.map((json) => Branch.fromJson(json)).toList();
     }
     return [];
   }
@@ -51,8 +47,8 @@ class BranchesListNotifier extends Notifier<List<Branch>> {
   Future<void> addBranch(Branch branch) async {
     final newList = [...state, branch];
     state = newList;
-    final cache = ref.read(appCacheProvider).value;
-    await cache?.writeJsonList(
+    final cache = ref.read(appCacheProvider);
+    await cache.writeJsonList(
       'saved_branches',
       newList.map((b) => b.toJson()).toList(),
     );
@@ -66,8 +62,8 @@ class BranchesListNotifier extends Notifier<List<Branch>> {
   Future<void> removeBranch(String id) async {
     final newList = state.where((b) => b.id != id).toList();
     state = newList;
-    final cache = ref.read(appCacheProvider).value;
-    await cache?.writeJsonList(
+    final cache = ref.read(appCacheProvider);
+    await cache.writeJsonList(
       'saved_branches',
       newList.map((b) => b.toJson()).toList(),
     );
